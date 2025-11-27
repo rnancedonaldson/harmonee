@@ -1,2 +1,1 @@
-# harmonee
-A work in progress :)
+# Harmonee

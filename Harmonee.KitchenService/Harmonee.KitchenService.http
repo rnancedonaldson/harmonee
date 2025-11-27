@@ -1,0 +1,6 @@
+@Harmonee.KitchenService_HostAddress = http://localhost:5197
+
+GET {{Harmonee.KitchenService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

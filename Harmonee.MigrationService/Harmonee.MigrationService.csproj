@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Harmonee.MigrationService-dfe3d92e-bea5-4bf2-ad4c-9422e01d11cd</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1-Preview.1" />
+    <PackageReference Include="OpenTelemetry" Version="1.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj" />
+    <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj" />
+    <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj" />
+    <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" />
+    <ProjectReference Include="..\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+  </ItemGroup>
+</Project>

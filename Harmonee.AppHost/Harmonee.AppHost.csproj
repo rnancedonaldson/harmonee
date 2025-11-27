@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>bb51bf49-b635-4a38-a975-b46ab002a510</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj">
+      <Private>False</Private>
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj">
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj">
+      <Private>False</Private>
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.MigrationService\Harmonee.MigrationService.csproj">
+      <Private>False</Private>
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.Presentation\Harmonee.Presentation\Harmonee.Presentation.csproj">
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.Resources\Harmonee.Resources.csproj" IsAspireProjectResource="false">
+      <Private>False</Private>
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj">
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.3.1" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.3.1" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.3.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
