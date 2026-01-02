@@ -1,9 +1,9 @@
-using Harmonee.Resources;
+//using Harmonee.Resources;
 using Harmonee.ScheduleService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddSqlServerDbContext<ScheduleContext>(Constants.Services.Schedule.DatabaseName);
+//builder.AddSqlServerDbContext<ScheduleContext>(Constants.Services.Schedule.DatabaseName);
 builder.AddServiceDefaults();
 
 // Add services to the container.

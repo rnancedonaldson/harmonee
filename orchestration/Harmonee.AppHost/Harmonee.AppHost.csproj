@@ -9,36 +9,26 @@
     <UserSecretsId>bb51bf49-b635-4a38-a975-b46ab002a510</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Services\Harmonee.AuthService\Harmonee.AuthService.csproj">
-      <Private>False</Private>
-      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Services\Harmonee.FamilyService\Harmonee.FamilyService.csproj">
+    <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj" >
       <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\Services\Harmonee.KitchenService\Harmonee.KitchenService.csproj">
-      <Private>False</Private>
-      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Services\Harmonee.MigrationService\Harmonee.MigrationService.csproj">
-      <Private>False</Private>
-      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\Harmonee.Resources\Harmonee.Resources.csproj" IsAspireProjectResource="false">
-      <Private>False</Private>
-      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Services\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj">
+    <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj" >
       <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj" />
-    <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj" />
-    <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj" />
-    <ProjectReference Include="..\Harmonee.MigrationService\Harmonee.MigrationService.csproj" />
-    <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" />
+    <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj" >
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.MigrationService\Harmonee.MigrationService.csproj" >
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" >
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.1.0" />

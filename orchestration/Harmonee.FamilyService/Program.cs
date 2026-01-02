@@ -1,9 +1,9 @@
 using Harmonee.FamilyService.Data;
-using Harmonee.Resources;
+//using Harmonee.Resources;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddSqlServerDbContext<FamilyContext>(Constants.Services.Family.DatabaseName);
+//builder.AddSqlServerDbContext<FamilyContext>(Constants.Services.Family.DatabaseName);
 builder.AddServiceDefaults();
 
 // Add services to the container.

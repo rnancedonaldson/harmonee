@@ -25,7 +25,6 @@
     <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj" />
     <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj" />
     <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" />
-    <ProjectReference Include="..\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj" />
   </ItemGroup>
 </Project>

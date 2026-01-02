@@ -1,5 +1,5 @@
 using Harmonee.AuthService.Data;
-using Constants = Harmonee.Resources.Constants;
+//using Constants = Harmonee.Resources.Constants;
 using Harmonee.Core.Models.Auth;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddSqlServerDbContext<HarmoneeAuthContext>(Constants.Services.Auth.DatabaseName);
+//builder.AddSqlServerDbContext<HarmoneeAuthContext>(Constants.Services.Auth.DatabaseName);
 
 // Add services to the container.
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme);
