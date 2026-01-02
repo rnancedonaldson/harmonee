@@ -22,8 +22,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\Harmonee.Core\Harmonee.Core.csproj" />
-    <ProjectReference Include="..\..\Shared\Harmonee.Resources\Harmonee.Resources.csproj" />
-    <ProjectReference Include="..\..\Aspire\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Application\Harmonee.Application.Shared\Harmonee.Application.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Domain\Harmonee.Domain.Shared\Harmonee.Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Infrastructure\Harmonee.Infrastructure.Shared\Harmonee.Infrastructure.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>

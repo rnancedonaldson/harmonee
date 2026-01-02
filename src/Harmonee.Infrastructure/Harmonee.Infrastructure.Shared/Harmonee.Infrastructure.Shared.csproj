@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Harmonee.Application\Harmonee.Application.Shared\Harmonee.Application.Shared.csproj" />
+    <ProjectReference Include="..\..\Harmonee.Domain\Harmonee.Domain.Shared\Harmonee.Domain.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -33,6 +33,12 @@
       <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj" />
+    <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj" />
+    <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj" />
+    <ProjectReference Include="..\Harmonee.MigrationService\Harmonee.MigrationService.csproj" />
+    <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="13.1.0" />

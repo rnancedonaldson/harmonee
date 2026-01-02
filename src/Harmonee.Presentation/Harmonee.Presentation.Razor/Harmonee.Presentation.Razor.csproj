@@ -14,5 +14,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Harmonee.Application\Harmonee.Application.Shared\Harmonee.Application.Shared.csproj" />
+    <ProjectReference Include="..\..\Harmonee.Domain\Harmonee.Domain.Shared\Harmonee.Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\Harmonee.Infrastructure\Harmonee.Infrastructure.Shared\Harmonee.Infrastructure.Shared.csproj" />
+    <ProjectReference Include="..\..\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+  </ItemGroup>
 
 </Project>

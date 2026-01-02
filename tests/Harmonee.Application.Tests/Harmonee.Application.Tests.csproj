@@ -15,6 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Harmonee.Application\Harmonee.Application.Shared\Harmonee.Application.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Domain\Harmonee.Domain.Shared\Harmonee.Domain.Shared.csproj" />
+    <ProjectReference Include="..\Harmonee.Testing.Shared\Harmonee.Testing.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

@@ -16,10 +16,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Services\Harmonee.AuthService\Harmonee.AuthService.csproj" />
-    <ProjectReference Include="..\..\Services\Harmonee.FamilyService\Harmonee.FamilyService.csproj" />
-    <ProjectReference Include="..\..\Services\Harmonee.KitchenService\Harmonee.KitchenService.csproj" />
-    <ProjectReference Include="..\..\Services\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" />
-    <ProjectReference Include="..\..\Aspire\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Application\Harmonee.Application.Shared\Harmonee.Application.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Domain\Harmonee.Domain.Shared\Harmonee.Domain.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Infrastructure\Harmonee.Infrastructure.Shared\Harmonee.Infrastructure.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Harmonee.FamilyService\Harmonee.FamilyService.csproj" />
+    <ProjectReference Include="..\Harmonee.KitchenService\Harmonee.KitchenService.csproj" />
+    <ProjectReference Include="..\Harmonee.ScheduleService\Harmonee.ScheduleService.csproj" />
+    <ProjectReference Include="..\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Harmonee.AuthService\Harmonee.AuthService.csproj" />
   </ItemGroup>
 </Project>
