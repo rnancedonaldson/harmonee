@@ -1,12 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Harmonee.Domain.Shared.Models.Auth;
 
-namespace Harmonee.Core.Models.Family
+namespace Harmonee.Domain.Models.Family;
+
+public class Family : OwnedEntity
 {
-    internal class Family
+    public IEnumerable<Guid> MemberIds;
+    public string FamilyName;
+
+    public Family(Guid ownerId, IEnumerable<Guid> memberIds, string familyName)
     {
+        Owner = ownerId;
+        MemberIds = memberIds;
+        FamilyName = familyName;
     }
 }

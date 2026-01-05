@@ -1,0 +1,41 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Application/">
+    <Project Path="Harmonee.Application/Harmonee.Application.Shared/Harmonee.Application.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Domain/">
+    <Project Path="Harmonee.Domain/Harmonee.Domain.Shared/Harmonee.Domain.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Harmonee.Infrastructure/">
+    <Project Path="Harmonee.Infrastructure/Harmonee.Infrastructure.Auth/Harmonee.Infrastructure.Auth.csproj" />
+    <Project Path="Harmonee.Infrastructure/Harmonee.Infrastructure.Family/Harmonee.Infrastructure.Family.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="Harmonee.Infrastructure/Harmonee.Infrastructure.Shared/Harmonee.Infrastructure.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Orchestration/">
+    <Project Path="../orchestration/Harmonee.AppHost/Harmonee.AppHost.csproj" />
+    <Project Path="../orchestration/Harmonee.AuthService/Harmonee.AuthService.csproj" />
+    <Project Path="../orchestration/Harmonee.FamilyService/Harmonee.FamilyService.csproj" />
+    <Project Path="../orchestration/Harmonee.KitchenService/Harmonee.KitchenService.csproj" />
+    <Project Path="../orchestration/Harmonee.MigrationService/Harmonee.MigrationService.csproj" />
+    <Project Path="../orchestration/Harmonee.ScheduleService/Harmonee.ScheduleService.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="Harmonee.Presentation/Harmonee.Presentation.Razor/Harmonee.Presentation.Razor.csproj" />
+    <Project Path="Harmonee.Presentation/Harmonee.Presentation.Shared/Harmonee.Presentation.Shared.csproj" />
+  </Folder>
+  <Folder Name="/ServiceDefaults/">
+    <Project Path="Harmonee.ServiceDefaults/Harmonee.ServiceDefaults/Harmonee.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="../tests/Harmonee.Application.Tests/Harmonee.Application.Tests.csproj" />
+    <Project Path="../tests/Harmonee.Domain.Tests/Harmonee.Domain.Tests.csproj" />
+    <Project Path="../tests/Harmonee.Presentation.Tests/Harmonee.Presentation.Tests.csproj" />
+    <Project Path="../tests/Harmonee.Testing.Shared/Harmonee.Testing.Shared.csproj" />
+  </Folder>
+</Solution>
