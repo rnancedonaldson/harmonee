@@ -1,9 +1,11 @@
-using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace Harmonee.Domain.Shared.Models.Auth;
+namespace Harmonee.Domain.Models.Auth;
 
-public class HarmoneeRole
+public class HarmoneeRole : OwnedEntity
 {
-    public int RoleId;
+    [Key]
+    public Guid RoleId;
+    [StringLength(63, MinimumLength = 3)]
     public required string RoleName;
 }

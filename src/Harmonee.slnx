@@ -10,11 +10,9 @@
   <Folder Name="/Domain/">
     <Project Path="Harmonee.Domain/Harmonee.Domain.Shared/Harmonee.Domain.Shared.csproj" />
   </Folder>
-  <Folder Name="/Harmonee.Infrastructure/">
+  <Folder Name="/Infrastructure/">
     <Project Path="Harmonee.Infrastructure/Harmonee.Infrastructure.Auth/Harmonee.Infrastructure.Auth.csproj" />
     <Project Path="Harmonee.Infrastructure/Harmonee.Infrastructure.Family/Harmonee.Infrastructure.Family.csproj" />
-  </Folder>
-  <Folder Name="/Infrastructure/">
     <Project Path="Harmonee.Infrastructure/Harmonee.Infrastructure.Shared/Harmonee.Infrastructure.Shared.csproj" />
   </Folder>
   <Folder Name="/Orchestration/">
