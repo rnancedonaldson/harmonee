@@ -7,7 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../Shared/Harmonee.Shared.Application/Harmonee.Shared.Application.csproj" />
     <ProjectReference Include="../Harmonee.FamilyService.Domain/Harmonee.FamilyService.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Commands/" />
+    <Folder Include="Models/" />
+    <Folder Include="Queries/" />
+    <Folder Include="Results/" />
   </ItemGroup>
 
 </Project>

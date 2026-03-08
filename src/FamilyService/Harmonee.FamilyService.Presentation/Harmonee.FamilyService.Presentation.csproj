@@ -10,4 +10,8 @@
     <ProjectReference Include="../Harmonee.FamilyService.Application/Harmonee.FamilyService.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Handlers/" />
+  </ItemGroup>
+
 </Project>
