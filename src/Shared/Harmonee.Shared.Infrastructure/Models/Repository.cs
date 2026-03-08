@@ -1,4 +1,3 @@
-using System;
 using Harmonee.Shared.Application.Interfaces;
 using Harmonee.Shared.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -18,33 +17,30 @@ public class Repository<T>(DbContext context) : IAsyncDisposable, IRepository<T>
     public async Task Delete(T entity, CancellationToken cancellationToken)
         => _dbSet.Remove(entity);
 
-    public async Task Delete(Guid entityId)
+    public async Task Delete(Guid entityId, CancellationToken cancellationToken)
     {
-        if (await GetById(entityId) is T entity)
-            await Delete(entity, CancellationToken.None);
+        if (await GetById(entityId, cancellationToken) is T entity)
+            await Delete(entity, cancellationToken);
     }
-
-    public async ValueTask DisposeAsync()
-        => await context.SaveChangesAsync();
 
     public async Task<T?> FirstOrDefault(Func<T, bool> predicate, CancellationToken cancellationToken, T? defaultValue = null)
         => await _dbSet.SingleOrDefaultAsync(e => predicate(e), cancellationToken) ?? defaultValue;
 
-    public async Task<T?> GetById(Guid id)
-        => await _dbSet.FindAsync(id);
+    public async Task<T?> GetById(Guid id, CancellationToken cancellationToken)
+        => await _dbSet.FindAsync(id, cancellationToken);
 
-    public async Task<IEnumerable<T>> List(IEnumerable<Guid> ids)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<IEnumerable<T>> List(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+        => await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync(cancellationToken);
 
-    public async Task<IEnumerable<T>> Search(Func<T, bool> predicate)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task<IEnumerable<T>> Search(Func<T, bool> predicate, CancellationToken cancellationToken)
+        => await _dbSet.Where(e => predicate(e)).ToListAsync(cancellationToken);
 
-    public async Task Update(T entity)
-    {
-        throw new NotImplementedException();
-    }
+    public async Task Update(T entity, CancellationToken cancellationToken)
+        => _dbSet.Update(entity);
+
+    public async Task Update(IEnumerable<T> entities, CancellationToken cancellationToken)
+        => _dbSet.UpdateRange(entities);
+
+    public async ValueTask DisposeAsync()
+        => await context.SaveChangesAsync();
 }
