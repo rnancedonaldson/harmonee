@@ -11,4 +11,8 @@
     <Folder Include="Models/" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../Harmonee.Shared.Domain/Harmonee.Shared.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

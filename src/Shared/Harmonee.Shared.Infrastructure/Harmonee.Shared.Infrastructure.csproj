@@ -6,4 +6,17 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Models/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Harmonee.Shared.Application/Harmonee.Shared.Application.csproj" />
+    <ProjectReference Include="../Harmonee.Shared.Domain/Harmonee.Shared.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
+  </ItemGroup>
+
 </Project>
