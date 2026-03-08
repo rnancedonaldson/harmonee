@@ -4,6 +4,12 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/FamilyService/">
+    <Project Path="FamilyService/Harmonee.FamilyService.Application/Harmonee.FamilyService.Application.csproj" />
+    <Project Path="FamilyService/Harmonee.FamilyService.Domain/Harmonee.FamilyService.Domain.csproj" />
+    <Project Path="FamilyService/Harmonee.FamilyService.Infrastructure/Harmonee.FamilyService.Infrastructure.csproj" />
+    <Project Path="FamilyService/Harmonee.FamilyService.Presentation/Harmonee.FamilyService.Presentation.csproj" />
+  </Folder>
   <Folder Name="/FeatureService/">
     <Project Path="FeatureService/Harmonee.FeatureService.Application/Harmonee.FeatureService.Application.csproj" />
     <Project Path="FeatureService/Harmonee.FeatureService.Domain/Harmonee.FeatureService.Domain.csproj" />
@@ -23,10 +29,12 @@
     <Project Path="Shared/Harmonee.Shared.Presentation/Harmonee.Shared.Presentation.csproj" />
   </Folder>
   <Folder Name="/Test/" />
-  <Folder Name="/Test/Integration/">
-    <Project Path="../tst/Integration/Harmonee.Test.Aspire/Harmonee.Test.Aspire.csproj" />
+  <Folder Name="/Test/Integration/" />
+  <Folder Name="/Test/Shared/">
+    <Project Path="../tst/Shared/Harmonee.Test.Shared/Harmonee.Test.Shared.csproj" />
   </Folder>
   <Folder Name="/Test/Unit/">
-    <Project Path="../tst/Unit/Harmonee.Test.Domain/Harmonee.Test.Domain.csproj" />
+    <Project Path="../tst/Unit/Harmonee.UnitTest.FamilyService/Harmonee.UnitTest.FamilyService.csproj" />
+    <Project Path="../tst/Unit/Harmonee.UnitTest.HarmoneeShared/Harmonee.UnitTest.HarmoneeShared.csproj" />
   </Folder>
 </Solution>

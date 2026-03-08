@@ -1,4 +1,4 @@
-﻿namespace Harmonee.Test.Domain;
+﻿namespace Harmonee.UnitTest.FamilyService;
 
 public class UnitTest1
 {

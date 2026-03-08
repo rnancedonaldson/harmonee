@@ -15,6 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../src/FamilyService/Harmonee.FamilyService.Application/Harmonee.FamilyService.Application.csproj" />
+    <ProjectReference Include="../../../src/FamilyService/Harmonee.FamilyService.Domain/Harmonee.FamilyService.Domain.csproj" />
+    <ProjectReference Include="../../../src/FamilyService/Harmonee.FamilyService.Presentation/Harmonee.FamilyService.Presentation.csproj" />
+    <ProjectReference Include="../../Shared/Harmonee.Test.Shared/Harmonee.Test.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
