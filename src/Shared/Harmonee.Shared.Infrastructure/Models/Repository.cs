@@ -23,8 +23,8 @@ public class Repository<T>(DbContext context) : IAsyncDisposable, IRepository<T>
             await Delete(entity, cancellationToken);
     }
 
-    public async Task<T?> FirstOrDefault(Func<T, bool> predicate, CancellationToken cancellationToken, T? defaultValue = null)
-        => await _dbSet.SingleOrDefaultAsync(e => predicate(e), cancellationToken) ?? defaultValue;
+    public async Task<T?> FirstOrDefault(IEntityFilter<T> filter, CancellationToken cancellationToken, T? defaultValue = null)
+        => await _dbSet.SingleOrDefaultAsync(e => filter.Allows(e), cancellationToken) ?? defaultValue;
 
     public async Task<T?> GetById(Guid id, CancellationToken cancellationToken)
         => await _dbSet.FindAsync(id, cancellationToken);
@@ -32,8 +32,8 @@ public class Repository<T>(DbContext context) : IAsyncDisposable, IRepository<T>
     public async Task<IEnumerable<T>> List(IEnumerable<Guid> ids, CancellationToken cancellationToken)
         => await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync(cancellationToken);
 
-    public async Task<IEnumerable<T>> Search(Func<T, bool> predicate, CancellationToken cancellationToken)
-        => await _dbSet.Where(e => predicate(e)).ToListAsync(cancellationToken);
+    public async Task<IEnumerable<T>> Search(IEntityFilter<T> filter, CancellationToken cancellationToken)
+        => await _dbSet.Where(e => filter.Allows(e)).ToListAsync(cancellationToken);
 
     public async Task Update(T entity, CancellationToken cancellationToken)
         => _dbSet.Update(entity);

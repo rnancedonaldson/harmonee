@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
-namespace Harmonee.Shared.Presentation.Extensions;
+namespace Harmonee.Shared.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
