@@ -4,7 +4,7 @@ namespace Harmonee.Shared.Infrastructure.Models;
 
 public class HarmoneeContext : DbContext
 {
-    public HarmoneeContext(DbContextOptions<HarmoneeContext> options) : base(options)
+    protected HarmoneeContext(DbContextOptions options) : base(options)
     {
     }
 

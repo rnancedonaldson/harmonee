@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../FeatureService/Harmonee.FeatureService.Application/Harmonee.FeatureService.Application.csproj" />
     <ProjectReference Include="../Harmonee.FamilyService.Domain/Harmonee.FamilyService.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\Harmonee.Shared.Infrastructure\Harmonee.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

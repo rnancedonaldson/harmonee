@@ -8,10 +8,18 @@
 
   <ItemGroup>
     <ProjectReference Include="../Harmonee.FamilyService.Application/Harmonee.FamilyService.Application.csproj" />
+    <ProjectReference Include="..\..\Shared\Harmonee.Shared.Infrastructure\Harmonee.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\Harmonee.FamilyService.Infrastructure\Harmonee.FamilyService.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DependencyInjection\" />
     <Folder Include="Handlers/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
   </ItemGroup>
 
 </Project>

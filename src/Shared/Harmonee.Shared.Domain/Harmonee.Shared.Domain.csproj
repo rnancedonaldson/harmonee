@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <Folder Include="Authorization\" />
+    <Folder Include="CQRS\" />
     <Folder Include="Interfaces/" />
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>
