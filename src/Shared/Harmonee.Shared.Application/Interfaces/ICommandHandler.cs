@@ -5,5 +5,5 @@ namespace Harmonee.Shared.Application.Interfaces;
 
 public interface ICommandHandler<TCommand> where TCommand : ICommand<IResource, IResult>
 {
-    Task<IResult> HandleAsync(TCommand command);
+    public Task<IResult> HandleAsync(TCommand command);
 }

@@ -24,4 +24,6 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+app.MapGet("/lookingForNamespace", () => "namespace is...");
+
 app.Run();

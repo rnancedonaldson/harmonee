@@ -4,7 +4,7 @@ using Harmonee.Shared.Application.Models;
 
 namespace Harmonee.FamilyService.Application.Results;
 
-public record GetFamilyResult() : Result<FamilyDto>
+public record GetFamilyResult(FamilyDto Family) : Result<FamilyDto>
 {
 
 }

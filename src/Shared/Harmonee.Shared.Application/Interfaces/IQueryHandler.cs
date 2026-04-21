@@ -5,5 +5,5 @@ namespace Harmonee.Shared.Application.Interfaces;
 
 public interface IQueryHandler<TQuery> where TQuery : IQuery<IResource, IResult>
 {
-    public Task<IResult> Handle(TQuery query);
+    public Task<IResult> HandleAsync(TQuery query);
 }

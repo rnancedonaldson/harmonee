@@ -2,6 +2,7 @@ using Harmonee.Shared.Application.Interfaces;
 using Harmonee.Shared.Domain.Interfaces;
 using Harmonee.Shared.Infrastructure.Models;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -42,11 +43,39 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IApplicationBuilder MapEndpoints(this IApplicationBuilder app)
+    public static WebApplication MapEndpoints(this WebApplication app)
     {
         var types = Assembly.GetExecutingAssembly().GetTypes();
         var handlers = GetAllHandlers(types);
+        if (!handlers.Any())
+            return app;
+
+        var requestHandlerMap = handlers.ToDictionary(h => h.RequestType);
         var requests = GetAllRequests(types);
+
+        var endpoints = requests.Join(requestHandlerMap,
+            r => r.RequestType,
+            h => h.Key,
+            (r, h) => new { Route = r.Route, Method = r.HttpMethod, Handler = h.Value });
+        
+        foreach (var endpoint in endpoints)
+        {
+            Func<string, RouteHandlerBuilder> mapMethod = endpoint.Method.ToString() switch
+            {
+                nameof(HttpMethod.Get) => (string route) => app.MapGet(endpoint.Route, (var ctx) => Task.CompletedTask),
+                nameof(HttpMethod.Post) => (string route) => app.MapPost(endpoint.Route, (var ctx) => Task.CompletedTask),
+                nameof(HttpMethod.Put) => (string route) => app.MapPut(endpoint.Route, (var ctx) => Task.CompletedTask),
+                nameof(HttpMethod.Delete) => (string route) => app.MapDelete(endpoint.Route, (var ctx) => Task.CompletedTask),
+                _ => throw new NotSupportedException($"HTTP method {endpoint.Method} is not supported.")
+            };
+        }
+
+        foreach (var request in requests)
+        {
+            var handler = requestHandlerMap.GetValueOrDefault(request.RequestType);
+            if (handler is not null)
+                app.MapGet("wtf/bro", (var ctx) => Task.CompletedTask);
+        }
 
         var handlerRoutes = handlers.Join(requests,
             h => h.RequestType,
@@ -57,29 +86,36 @@ public static class DependencyInjection
     }
 
     private static IEnumerable<RequestRegistration> GetAllRequests(Type[] types)
-        => GetCommands(types).Concat(GetQueries(types));
+    {
+        foreach (var type in types)
+    {
+            var commandInterface = type.GetInterface(nameof(ICommand<IResource, IResult>));
+            var queryInterface = type.GetInterface(nameof(IQuery<IResource, IResult>));
+            var requestInterface = type.GetInterface(nameof(IRequest<IResource>));
 
-    private static IEnumerable<RequestRegistration> GetCommands(Type[] types)
-        => types.Where(t => t.IsAssignableTo(typeof(ICommand<IResource, IResult>)))
-            .Select(t =>
+            if ((commandInterface is not null || queryInterface is not null) && requestInterface is not null)
             {
-                var commandInterface = t.GetInterface(nameof(ICommand<IResource, IResult>));
-                var resourceType = commandInterface!.GetGenericArguments()[0];
-                var resultType = commandInterface.GetGenericArguments()[1];
-                var route = (string)t.GetProperty("Route", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)!;
-                return new RequestRegistration(t, resourceType, resultType, route);
-            });
+                var requestRegistration = BuildRequestRegistration(commandInterface?.GetGenericArguments() ?? queryInterface?.GetGenericArguments(), requestInterface);
+                if (requestRegistration is not null)
+                    yield return requestRegistration;
+            }
+        }
+    }
 
-    private static IEnumerable<RequestRegistration> GetQueries(Type[] types)
-        => types.Where(t => t.IsAssignableTo(typeof(IQuery<IResource, IResult>)))
-            .Select(t =>
-            {
-                var queryInterface = t.GetInterface(nameof(IQuery<IResource, IResult>));
-                var resourceType = queryInterface!.GetGenericArguments()[0];
-                var resultType = queryInterface.GetGenericArguments()[1];
-                var route = (string)t.GetProperty("Route", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)!;
-                return new RequestRegistration(t, resourceType, resultType, route);
-            });
+    private static RequestRegistration? BuildRequestRegistration(Type[]? queryCommandArgs, Type? requestInterface)
+    {
+        if (queryCommandArgs?.Length != 2 || requestInterface is null)
+            return null;
+
+        var resourceType = queryCommandArgs.ElementAtOrDefault(0);
+        var resultType = queryCommandArgs.ElementAtOrDefault(1);
+        var route = requestInterface.GetProperty("Route", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)?.ToString();
+        var httpMethod = requestInterface.GetProperty("Route", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as HttpMethod;
+        if (resourceType is null || resultType is null || route is null || httpMethod is null)
+            return null;
+
+        return new RequestRegistration(requestInterface, resourceType, resultType, route, httpMethod);
+    }
 
     private static IEnumerable<HandlerRegistration> GetAllHandlers(Type[] types)
         => GetCommandHandlers(types).Concat(GetQueryHandlers(types));
@@ -104,5 +140,5 @@ public static class DependencyInjection
             });
 
     private record HandlerRegistration(Type ServiceType, Type ImplementationType, Type RequestType);
-    private record RequestRegistration(Type RequestType, Type ResourceType, Type ResultType, string Route);
+    private record RequestRegistration(Type RequestType, Type ResourceType, Type ResultType, string Route, HttpMethod HttpMethod);
 }

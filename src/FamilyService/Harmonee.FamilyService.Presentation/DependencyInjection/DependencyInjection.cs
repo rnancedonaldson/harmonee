@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Harmonee.Shared.Infrastructure.Extensions;
 using Harmonee.FamilyService.Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using System.Reflection;
 using System.Windows.Input;
 
@@ -17,7 +18,7 @@ public static class DependencyInjection
         return builder;
     }
 
-    public static IApplicationBuilder MapFamilyService(this IApplicationBuilder app)
+    public static IApplicationBuilder MapFamilyService(this Microsoft.AspNetCore.Routing.IRouteBuilder app)
     {
     }
 }

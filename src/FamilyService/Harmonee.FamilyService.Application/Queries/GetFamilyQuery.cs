@@ -1,10 +1,11 @@
 using Harmonee.FamilyService.Application.Results;
+using Harmonee.FamilyService.Domain.Models;
 using Harmonee.Shared.Application.Interfaces;
 
 namespace Harmonee.FamilyService.Application.Queries;
 
-public record GetFamilyQuery(Guid FamilyId) : IQuery<GetFamilyResult>
+public record GetFamilyQuery(Guid FamilyId) : IQuery<Family, GetFamilyResult>, IRequest<Family>
 {
-    public static string Route = $"Family/{FamilyId}";
-    public string GetRoute() => $"Family/{FamilyId}";
+    public static string Route = "Family/{FamilyId}";
+    public string GetRoute() => string.Format(Route, FamilyId);
 }
