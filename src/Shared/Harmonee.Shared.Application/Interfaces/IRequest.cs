@@ -1,10 +1,8 @@
-using System;
-
 namespace Harmonee.Shared.Application.Interfaces;
 
-public interface IRequest<IResource>
+public interface IRequest
 {
-    public static string Route = typeof(IResource).Name;
-    public static HttpMethod HttpMethod = HttpMethod.Post;
-    public string GetFormattedRoute(object[] args) => string.Format(Route, args);
+    public static HttpMethod HttpMethod { get; }
+    public static string RouteTemplate { get; }
+    public string GetRoute(object[]? parameters = null);
 }
