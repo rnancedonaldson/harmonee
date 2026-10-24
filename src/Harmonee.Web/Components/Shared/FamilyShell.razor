@@ -1,0 +1,53 @@
+@* Frame for every family page: title, admin-override banner, and tabs for the sections the user's role allows. *@
+
+<div class="family-shell">
+    <div class="family-heading">
+        <h1>@Title</h1>
+        <p class="muted">@Family.Name</p>
+    </div>
+
+    @if (Family.MyAccess.IsAdminOverride)
+    {
+        <div class="alert alert-admin" role="status" data-testid="admin-banner">
+            You're viewing this family as a <strong>platform administrator</strong>. Changes you make are audit-logged.
+        </div>
+    }
+
+    <nav class="tabs" aria-label="Family sections">
+        <NavLink href="@Url("")" Match="NavLinkMatch.All">Overview</NavLink>
+        @if (Family.Can(FamilyPermission.ViewCalendar))
+        {
+            <NavLink href="@Url("/calendar")" Match="NavLinkMatch.Prefix">Calendar</NavLink>
+        }
+        @if (Family.Can(FamilyPermission.ViewShoppingLists))
+        {
+            <NavLink href="@Url("/shopping")" Match="NavLinkMatch.Prefix">Shopping</NavLink>
+        }
+        @if (Family.Can(FamilyPermission.ViewMealPlans))
+        {
+            <NavLink href="@Url("/meals")" Match="NavLinkMatch.Prefix">Meals</NavLink>
+        }
+        @if (Family.Can(FamilyPermission.ViewNotes))
+        {
+            <NavLink href="@Url("/notes")" Match="NavLinkMatch.Prefix">Notes</NavLink>
+        }
+        <NavLink href="@Url("/settings")" Match="NavLinkMatch.Prefix">Members &amp; roles</NavLink>
+    </nav>
+
+    <div class="family-content">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public FamilyResponse Family { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string Url(string suffix) => $"families/{Family.Id}{suffix}";
+}

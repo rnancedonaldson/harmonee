@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Harmonee.Api\Harmonee.Api.csproj" />
+    <ProjectReference Include="..\..\src\Harmonee.Web\Harmonee.Web.csproj" />
+  </ItemGroup>
+</Project>

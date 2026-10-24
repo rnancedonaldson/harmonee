@@ -1,0 +1,14 @@
+@if (Problem is not null || !string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-error" role="alert">
+        @(Problem?.Message ?? Message)
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ApiProblem? Problem { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+}

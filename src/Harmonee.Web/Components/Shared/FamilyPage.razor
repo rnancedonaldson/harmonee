@@ -1,0 +1,40 @@
+@* Loads the family, handles not-found/forbidden, and renders the shell. Pages put their content inside. *@
+
+<PageTitle>@Title · @(Family?.Name ?? "Family") · Harmonee</PageTitle>
+
+@if (Problem is not null)
+{
+    <h1>@(Problem.IsNotFound ? "Family not found" : "Something went wrong")</h1>
+    <ProblemAlert Problem="Problem" />
+    <p><a href="/">Back to your families</a></p>
+}
+else if (Family is not null)
+{
+    <FamilyShell Family="Family" Title="@Title">
+        @if (RequiredPermission is { } permission && !Family.Can(permission))
+        {
+            <div class="alert alert-info" role="status">Your role in this family doesn't include access to this section.</div>
+        }
+        else
+        {
+            @ChildContent
+        }
+    </FamilyShell>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public FamilyResponse? Family { get; set; }
+
+    [Parameter]
+    public ApiProblem? Problem { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public FamilyPermission? RequiredPermission { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

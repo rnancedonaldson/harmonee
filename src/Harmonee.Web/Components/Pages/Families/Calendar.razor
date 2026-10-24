@@ -1,0 +1,104 @@
+@page "/families/{FamilyId:guid}/calendar"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Calendar" RequiredPermission="FamilyPermission.ViewCalendar">
+    <div class="toolbar">
+        <a class="btn btn-ghost" href="@FamilyUrl($"/calendar?from={Display.Iso(_from.AddDays(-RangeDays))}")">← Earlier</a>
+        <span class="range">@Display.LongDay(_from) – @Display.LongDay(_from.AddDays(RangeDays - 1))</span>
+        <a class="btn btn-ghost" href="@FamilyUrl($"/calendar?from={Display.Iso(_from.AddDays(RangeDays))}")">Later →</a>
+    </div>
+
+    @if (TimeZone.IsUtcFallback)
+    {
+        <p class="muted small">Times are shown in UTC until your browser reports its time zone. Reload the page if they look off.</p>
+    }
+
+    @if (Family!.Can(FamilyPermission.ManageCalendar))
+    {
+        <details class="panel" open="@(ActionProblem is not null)">
+            <summary>Add an event</summary>
+            <EditForm Model="Add" FormName="add-event" OnValidSubmit="AddAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="ActionProblem" />
+                <EventFields Model="Add!" />
+                <button type="submit" class="btn btn-primary">Add event</button>
+            </EditForm>
+        </details>
+    }
+
+    <ProblemAlert Problem="_listProblem" />
+
+    @if (_days.Count == 0)
+    {
+        <p class="empty">No events in this period.</p>
+    }
+    else
+    {
+        @foreach (var day in _days)
+        {
+            <section class="day">
+                <h2 class="day-heading">@Display.Day(day.Key, _today) <span class="muted">@Display.LongDay(day.Key)</span></h2>
+                <ul class="list" role="list">
+                    @foreach (var e in day)
+                    {
+                        <li class="event">
+                            <span class="when">@(e.IsAllDay ? "All day" : $"{Display.Time(e.StartsAt, TimeZone)}–{Display.Time(e.EndsAt, TimeZone)}")</span>
+                            <a href="@FamilyUrl($"/calendar/{e.Id}")">@e.Title</a>
+                            @if (!string.IsNullOrEmpty(e.Location))
+                            {
+                                <span class="muted"> · @e.Location</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+
+        @if (_truncated)
+        {
+            <p class="muted">Only the first @FieldLimits.MaxCalendarEventsPerQuery events are shown.</p>
+        }
+    }
+</FamilyPage>
+
+@code {
+    private const int RangeDays = 28;
+    private DateOnly _from;
+    private DateOnly _today;
+    private List<IGrouping<DateOnly, CalendarEventResponse>> _days = [];
+    private bool _truncated;
+    private ApiProblem? _listProblem;
+
+    [SupplyParameterFromQuery(Name = "from")]
+    private string? FromQuery { get; set; }
+
+    // Name = "Model" matches the input names generated inside <EventFields Model=...>.
+    [SupplyParameterFromForm(FormName = "add-event", Name = "Model")]
+    private EventForm? Add { get; set; }
+
+    protected override async Task LoadAsync()
+    {
+        _today = TimeZone.Today(Clock);
+        _from = DateOnly.TryParseExact(FromQuery, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var from) ? from : _today;
+        Add ??= EventForm.StartingAt(_today.ToDateTime(new TimeOnly(9, 0)));
+
+        var result = await Api.ListEventsAsync(FamilyId, TimeZone.StartOfDay(_from), TimeZone.StartOfDay(_from.AddDays(RangeDays)), Aborted);
+        _listProblem = result.Problem;
+        if (result.Value is { } events)
+        {
+            _truncated = events.IsTruncated;
+            _days = [.. events.Items.GroupBy(e => DateOnly.FromDateTime(TimeZone.ToLocal(e.StartsAt).DateTime))];
+        }
+    }
+
+    private async Task AddAsync()
+    {
+        if (Add!.Ends < Add.Starts)
+        {
+            ActionProblem = new ApiProblem(System.Net.HttpStatusCode.BadRequest, "The event can't end before it starts.", null, new Dictionary<string, string[]>(StringComparer.Ordinal), null);
+            return;
+        }
+
+        var created = await Api.CreateEventAsync(FamilyId, Add.ToRequest(TimeZone), Aborted);
+        Complete(created.Problem, FamilyUrl($"/calendar?from={Display.Iso(DateOnly.FromDateTime(Add.Starts))}"));
+    }
+}

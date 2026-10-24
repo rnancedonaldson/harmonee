@@ -1,0 +1,128 @@
+@page "/"
+@inject UserSession Session
+@inject HarmoneeApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Harmonee</PageTitle>
+
+@if (!_signedIn)
+{
+    <section class="hero">
+        <h1>Keep the whole family in tune</h1>
+        <p class="lead">One shared place for the family calendar, shopping lists, meal plans and notes — with roles so everyone sees exactly what they should.</p>
+        <a class="btn btn-primary btn-lg" href="authentication/login">Sign in to get started</a>
+    </section>
+}
+else
+{
+    <h1>Your families</h1>
+    <ProblemAlert Problem="_loadProblem" />
+
+    @if (_me is not null)
+    {
+        @if (_me.Families.Count == 0)
+        {
+            <p class="lead">You're not in a family yet. Create one, or join with an invite code from a family owner.</p>
+        }
+        else
+        {
+            <ul class="card-grid" role="list">
+                @foreach (var family in _me.Families)
+                {
+                    <li class="card">
+                        <a class="card-link" href="@($"families/{family.FamilyId}")">
+                            <h2>@family.FamilyName</h2>
+                            <p class="muted">@(family.IsOwner ? "Owner" : family.RoleName)</p>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    }
+
+    <div class="two-col">
+        <section class="panel">
+            <h2>Create a family</h2>
+            <EditForm Model="Create" FormName="create-family" OnValidSubmit="CreateAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="_createProblem" />
+                <label for="family-name">Family name</label>
+                <InputText id="family-name" @bind-Value="Create!.Name" placeholder="The Smiths" autocomplete="off" />
+                <ValidationMessage For="() => Create!.Name" />
+                <button type="submit" class="btn btn-primary">Create family</button>
+            </EditForm>
+        </section>
+
+        <section class="panel">
+            <h2>Join a family</h2>
+            <EditForm Model="Join" FormName="join-family" OnValidSubmit="JoinAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="_joinProblem" />
+                <label for="invite-code">Invite code</label>
+                <InputText id="invite-code" @bind-Value="Join!.InviteCode" placeholder="ABCD2345" autocomplete="off" class="code-input" />
+                <ValidationMessage For="() => Join!.InviteCode" />
+                <button type="submit" class="btn">Join family</button>
+            </EditForm>
+        </section>
+    </div>
+}
+
+@code {
+    private bool _signedIn;
+    private MeResponse? _me;
+    private ApiProblem? _loadProblem;
+    private ApiProblem? _createProblem;
+    private ApiProblem? _joinProblem;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "create-family")]
+    private CreateFamilyForm? Create { get; set; }
+
+    [SupplyParameterFromForm(FormName = "join-family")]
+    private JoinFamilyForm? Join { get; set; }
+
+    private CancellationToken Aborted => HttpContext?.RequestAborted ?? CancellationToken.None;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Create ??= new();
+        Join ??= new();
+
+        _signedIn = AuthenticationState is not null && (await AuthenticationState).User.Identity?.IsAuthenticated == true;
+        if (_signedIn)
+        {
+            var me = await Session.GetMeAsync(Aborted);
+            _me = me.Value;
+            _loadProblem = me.Problem;
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        var created = await Api.CreateFamilyAsync(new CreateFamilyRequest(Create!.Name!.Trim()), Aborted);
+        if (created.IsSuccess)
+        {
+            Navigation.NavigateTo($"families/{created.Value!.Id}");
+            return;
+        }
+
+        _createProblem = created.Problem;
+    }
+
+    private async Task JoinAsync()
+    {
+        var joined = await Api.JoinFamilyAsync(new JoinFamilyRequest(Join!.InviteCode!.Trim()), Aborted);
+        if (joined.IsSuccess)
+        {
+            Navigation.NavigateTo($"families/{joined.Value!.FamilyId}");
+            return;
+        }
+
+        _joinProblem = joined.Problem;
+    }
+}

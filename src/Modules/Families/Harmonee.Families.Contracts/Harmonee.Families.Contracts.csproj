@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Public, in-process contract of the Families module: family access checks used by every family-scoped module.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\Harmonee.SharedKernel\Harmonee.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Harmonee.SharedKernel.AspNetCore\Harmonee.SharedKernel.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\..\Harmonee.Api.Contracts\Harmonee.Api.Contracts.csproj" />
+  </ItemGroup>
+</Project>

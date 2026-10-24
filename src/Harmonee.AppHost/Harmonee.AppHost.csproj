@@ -1,0 +1,19 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.4">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Description>Aspire app model: runs the API, web app, migrations and database locally, and describes them for Azure deployment.</Description>
+    <UserSecretsId>harmonee-apphost-5b2c9e71</UserSecretsId>
+    <!-- Aspire's orchestration packages are OS-specific, so a lock file can't be shared between Windows and Linux. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Azure.Sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Harmonee.Api\Harmonee.Api.csproj" />
+    <ProjectReference Include="..\Harmonee.Web\Harmonee.Web.csproj" />
+    <ProjectReference Include="..\Harmonee.MigrationService\Harmonee.MigrationService.csproj" />
+    <ProjectReference Include="..\Shared\Harmonee.SharedKernel\Harmonee.SharedKernel.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+</Project>

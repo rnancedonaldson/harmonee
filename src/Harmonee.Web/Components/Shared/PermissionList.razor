@@ -1,0 +1,18 @@
+@if (Permissions.Count == 0)
+{
+    <p class="muted small">No permissions.</p>
+}
+else
+{
+    <ul class="permission-list" role="list">
+        @foreach (var permission in Permissions.Order())
+        {
+            <li>@FamilyPermissions.Describe(permission)</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyCollection<FamilyPermission> Permissions { get; set; } = [];
+}

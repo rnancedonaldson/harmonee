@@ -1,0 +1,101 @@
+root = true
+
+[*]
+indent_style = space
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.{json,yml,yaml,xml,csproj,props,targets,slnx,bicep,razor.css,css}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{cs,razor}]
+indent_size = 4
+
+# Namespaces and usings
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+
+# var
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+
+# Braces and expression bodies
+csharp_prefer_braces = when_multiline:warning
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = true:suggestion
+
+# Modern C#
+csharp_style_prefer_primary_constructors = true:suggestion
+dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
+csharp_style_prefer_pattern_matching = true:suggestion
+
+# Naming: private fields _camelCase
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+dotnet_naming_style.underscore_camel.required_prefix = _
+
+# Constants PascalCase (takes precedence over the field rule above)
+dotnet_naming_rule.constants_pascal.symbols = constant_fields
+dotnet_naming_rule.constants_pascal.style = pascal
+dotnet_naming_rule.constants_pascal.severity = warning
+dotnet_naming_symbols.constant_fields.applicable_kinds = field
+dotnet_naming_symbols.constant_fields.required_modifiers = const
+dotnet_naming_style.pascal.capitalization = pascal_case
+
+# Private static fields: s_camelCase (dotnet/runtime convention)
+dotnet_naming_rule.private_static_s.symbols = private_static_fields
+dotnet_naming_rule.private_static_s.style = s_camel
+dotnet_naming_rule.private_static_s.severity = warning
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+dotnet_naming_style.s_camel.capitalization = camel_case
+dotnet_naming_style.s_camel.required_prefix = s_
+
+# Non-private static readonly fields: PascalCase
+dotnet_naming_rule.static_readonly_pascal.symbols = static_readonly_fields
+dotnet_naming_rule.static_readonly_pascal.style = pascal
+dotnet_naming_rule.static_readonly_pascal.severity = warning
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.static_readonly_fields.applicable_accessibilities = public, internal, protected, protected_internal
+dotnet_naming_symbols.static_readonly_fields.required_modifiers = static, readonly
+
+# Analyzer tuning
+# ConfigureAwait(false) is unnecessary in ASP.NET Core application code.
+dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.MA0004.severity = none
+# Minimal API handlers and EF entities are intentionally simple; these rules add noise without value here.
+dotnet_diagnostic.CA1812.severity = none
+dotnet_diagnostic.MA0048.severity = none
+# C#-only codebase: VB keyword clashes (Error) are irrelevant.
+dotnet_diagnostic.CA1716.severity = none
+# Static factories on Result<T> are an intentional, common pattern.
+dotnet_diagnostic.CA1000.severity = none
+# StructLayout on small value types adds noise without benefit.
+dotnet_diagnostic.MA0008.severity = none
+
+[tests/**.cs]
+# Test method names use underscores for readability.
+dotnet_diagnostic.CA1707.severity = none
+# Tests don't need to pass cancellation tokens everywhere.
+dotnet_diagnostic.CA2016.severity = none
+dotnet_diagnostic.MA0040.severity = none
+dotnet_diagnostic.MA0032.severity = none
+dotnet_diagnostic.xUnit1051.severity = none
+dotnet_diagnostic.MA0002.severity = none
+dotnet_diagnostic.CA2234.severity = none
+dotnet_diagnostic.CA1515.severity = none
+
+[**/Migrations/*.cs]
+generated_code = true

@@ -1,0 +1,121 @@
+@page "/families/{FamilyId:guid}"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Overview">
+    <div class="dashboard">
+        @if (Family!.Can(FamilyPermission.ViewCalendar))
+        {
+            <section class="panel">
+                <h2><a href="@FamilyUrl("/calendar")">Coming up</a></h2>
+                @if (_events is { Count: > 0 })
+                {
+                    <ul class="list" role="list">
+                        @foreach (var e in _events)
+                        {
+                            <li>
+                                <span class="when">@Display.EventWhen(e, TimeZone)</span>
+                                <a href="@FamilyUrl($"/calendar/{e.Id}")">@e.Title</a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="muted">Nothing in the next 7 days.</p>
+                }
+            </section>
+        }
+
+        @if (Family!.Can(FamilyPermission.ViewMealPlans))
+        {
+            <section class="panel">
+                <h2><a href="@FamilyUrl("/meals")">Meals today &amp; tomorrow</a></h2>
+                @if (_meals is { Count: > 0 })
+                {
+                    <ul class="list" role="list">
+                        @foreach (var m in _meals)
+                        {
+                            <li><span class="when">@Display.Day(m.Date, _today) · @m.MealType</span> @m.Title</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="muted">No meals planned yet.</p>
+                }
+            </section>
+        }
+
+        @if (Family!.Can(FamilyPermission.ViewShoppingLists))
+        {
+            <section class="panel">
+                <h2><a href="@FamilyUrl("/shopping")">Shopping lists</a></h2>
+                @if (_lists is { Count: > 0 })
+                {
+                    <ul class="list" role="list">
+                        @foreach (var l in _lists)
+                        {
+                            <li>
+                                <a href="@FamilyUrl($"/shopping/{l.Id}")">@l.Name</a>
+                                <span class="badge">@l.OpenItemCount to get</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="muted">No shopping lists yet.</p>
+                }
+            </section>
+        }
+
+        @if (Family!.Can(FamilyPermission.ViewNotes))
+        {
+            <section class="panel">
+                <h2><a href="@FamilyUrl("/notes")">Recent notes</a></h2>
+                @if (_notes is { Count: > 0 })
+                {
+                    <ul class="list" role="list">
+                        @foreach (var n in _notes)
+                        {
+                            <li><a href="@FamilyUrl($"/notes/{n.Id}")">@n.Title</a></li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="muted">No notes yet.</p>
+                }
+            </section>
+        }
+    </div>
+</FamilyPage>
+
+@code {
+    private IReadOnlyList<CalendarEventResponse>? _events;
+    private IReadOnlyList<MealPlanEntryResponse>? _meals;
+    private IReadOnlyList<ShoppingListSummary>? _lists;
+    private IReadOnlyList<NoteSummary>? _notes;
+    private DateOnly _today;
+
+    protected override async Task LoadAsync()
+    {
+        _today = TimeZone.Today(Clock);
+        var start = TimeZone.StartOfDay(_today);
+
+        Task<ApiResult<CalendarEventsResponse>>? events = Family!.Can(FamilyPermission.ViewCalendar)
+            ? Api.ListEventsAsync(FamilyId, start, start.AddDays(7), Aborted) : null;
+        Task<ApiResult<MealPlanResponse>>? meals = Family!.Can(FamilyPermission.ViewMealPlans)
+            ? Api.GetMealPlanAsync(FamilyId, _today, _today.AddDays(1), Aborted) : null;
+        Task<ApiResult<CursorPage<ShoppingListSummary>>>? lists = Family!.Can(FamilyPermission.ViewShoppingLists)
+            ? Api.ListShoppingListsAsync(FamilyId, null, Aborted) : null;
+        Task<ApiResult<CursorPage<NoteSummary>>>? notes = Family!.Can(FamilyPermission.ViewNotes)
+            ? Api.ListNotesAsync(FamilyId, null, 5, Aborted) : null;
+
+        await Task.WhenAll(new Task?[] { events, meals, lists, notes }.OfType<Task>());
+
+        _events = events is null ? null : (await events).Value?.Items.Take(8).ToList();
+        _meals = meals is null ? null : (await meals).Value?.Entries;
+        _lists = lists is null ? null : (await lists).Value?.Items.Take(5).ToList();
+        _notes = notes is null ? null : (await notes).Value?.Items;
+    }
+}

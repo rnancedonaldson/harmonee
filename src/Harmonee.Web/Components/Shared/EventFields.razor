@@ -1,0 +1,34 @@
+@* Shared inputs for creating and editing an event. Must be placed inside an EditForm whose model is the same instance. *@
+
+<label for="event-title">Title</label>
+<InputText id="event-title" @bind-Value="Model.Title" />
+<ValidationMessage For="() => Model.Title" />
+
+<div class="field-row">
+    <div>
+        <label for="event-starts">Starts</label>
+        <InputDate id="event-starts" Type="InputDateType.DateTimeLocal" @bind-Value="Model.Starts" />
+    </div>
+    <div>
+        <label for="event-ends">Ends</label>
+        <InputDate id="event-ends" Type="InputDateType.DateTimeLocal" @bind-Value="Model.Ends" />
+    </div>
+</div>
+
+<label class="checkbox">
+    <InputCheckbox @bind-Value="Model.IsAllDay" />
+    All-day event (uses the dates only)
+</label>
+
+<label for="event-location">Location <span class="muted">(optional)</span></label>
+<InputText id="event-location" @bind-Value="Model.Location" />
+<ValidationMessage For="() => Model.Location" />
+
+<label for="event-description">Details <span class="muted">(optional)</span></label>
+<InputTextArea id="event-description" @bind-Value="Model.Description" rows="3" />
+<ValidationMessage For="() => Model.Description" />
+
+@code {
+    [Parameter, EditorRequired]
+    public EventForm Model { get; set; } = default!;
+}

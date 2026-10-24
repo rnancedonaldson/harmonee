@@ -1,0 +1,51 @@
+@page "/families/{FamilyId:guid}/notes"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Notes" RequiredPermission="FamilyPermission.ViewNotes">
+    @if (Family!.Can(FamilyPermission.ManageNotes))
+    {
+        <p><a class="btn btn-primary" href="@FamilyUrl("/notes/new")">New note</a></p>
+    }
+
+    <ProblemAlert Problem="_listProblem" />
+
+    @if (_notes.Count == 0)
+    {
+        <p class="empty">No notes yet.</p>
+    }
+    else
+    {
+        <ul class="card-grid" role="list">
+            @foreach (var note in _notes)
+            {
+                <li class="card">
+                    <a class="card-link" href="@FamilyUrl($"/notes/{note.Id}")">
+                        <h2>@note.Title</h2>
+                        <p class="excerpt">@note.Excerpt</p>
+                        <p class="muted small">@Family!.NameOf(note.UpdatedByUserId) · @Display.DateTime(note.UpdatedAt, TimeZone)</p>
+                    </a>
+                </li>
+            }
+        </ul>
+        @if (_nextCursor is not null)
+        {
+            <p><a class="btn btn-ghost" href="@FamilyUrl($"/notes?cursor={Uri.EscapeDataString(_nextCursor)}")">Older notes →</a></p>
+        }
+    }
+</FamilyPage>
+
+@code {
+    private IReadOnlyList<NoteSummary> _notes = [];
+    private string? _nextCursor;
+    private ApiProblem? _listProblem;
+
+    [SupplyParameterFromQuery(Name = "cursor")]
+    private string? Cursor { get; set; }
+
+    protected override async Task LoadAsync()
+    {
+        var result = await Api.ListNotesAsync(FamilyId, Cursor, null, Aborted);
+        _notes = result.Value?.Items ?? [];
+        _nextCursor = result.Value?.NextCursor;
+        _listProblem = result.Problem;
+    }
+}

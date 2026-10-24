@@ -1,0 +1,90 @@
+@page "/families/{FamilyId:guid}/calendar/{EventId:guid}"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Event" RequiredPermission="FamilyPermission.ViewCalendar">
+    <p><a href="@FamilyUrl("/calendar")">← Back to calendar</a></p>
+
+    @if (_event is null)
+    {
+        <ProblemAlert Problem="_eventProblem" />
+    }
+    else if (Family!.Can(FamilyPermission.ManageCalendar))
+    {
+        <section class="panel">
+            <EditForm Model="Edit" FormName="edit-event" OnValidSubmit="SaveAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="ActionProblem" />
+                <input type="hidden" name="Model.ETag" value="@Edit!.ETag" />
+                <EventFields Model="Edit" />
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </EditForm>
+            <form method="post" @formname="delete-event" @onsubmit="DeleteAsync" class="danger-zone" data-enhance>
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-danger">Delete event</button>
+            </form>
+        </section>
+        <p class="muted small">Added by @Family!.NameOf(_event.CreatedByUserId) · last updated @Display.DateTime(_event.UpdatedAt, TimeZone)</p>
+    }
+    else
+    {
+        <section class="panel">
+            <h2>@_event.Title</h2>
+            <p class="when">@Display.EventWhen(_event, TimeZone)</p>
+            @if (!string.IsNullOrEmpty(_event.Location))
+            {
+                <p>📍 @_event.Location</p>
+            }
+            @if (!string.IsNullOrEmpty(_event.Description))
+            {
+                <p class="prewrap">@_event.Description</p>
+            }
+            <p class="muted small">Added by @Family!.NameOf(_event.CreatedByUserId)</p>
+        </section>
+    }
+</FamilyPage>
+
+@code {
+    private CalendarEventResponse? _event;
+    private ApiProblem? _eventProblem;
+
+    [Parameter]
+    public Guid EventId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-event", Name = "Model")]
+    private EventForm? Edit { get; set; }
+
+    protected override async Task LoadAsync()
+    {
+        var result = await Api.GetEventAsync(FamilyId, EventId, Aborted);
+        _event = result.Value;
+        _eventProblem = result.Problem;
+        if (_event is not null)
+        {
+            Edit ??= EventForm.From(_event, TimeZone);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Edit!.Ends < Edit.Starts)
+        {
+            ActionProblem = new ApiProblem(System.Net.HttpStatusCode.BadRequest, "The event can't end before it starts.", null, new Dictionary<string, string[]>(StringComparer.Ordinal), null);
+            return;
+        }
+
+        var saved = await Api.UpdateEventAsync(FamilyId, EventId, Edit.ToRequest(TimeZone), Edit.ETag ?? string.Empty, Aborted);
+        if (saved.Problem?.IsConcurrencyConflict == true && _event is not null)
+        {
+            Edit = EventForm.From(_event, TimeZone);
+        }
+
+        Complete(saved.Problem, FamilyUrl("/calendar"));
+    }
+
+    private async Task DeleteAsync()
+    {
+        var deleted = await Api.DeleteEventAsync(FamilyId, EventId, null, Aborted);
+        Complete(deleted.Problem, FamilyUrl("/calendar"));
+    }
+}

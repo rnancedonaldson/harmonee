@@ -1,0 +1,103 @@
+@page "/families/{FamilyId:guid}/notes/new"
+@page "/families/{FamilyId:guid}/notes/{NoteId:guid}"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="@(IsNew ? "New note" : _note?.Title ?? "Note")" RequiredPermission="FamilyPermission.ViewNotes">
+    <p><a href="@FamilyUrl("/notes")">← All notes</a></p>
+
+    @if (!IsNew && _note is null)
+    {
+        <ProblemAlert Problem="_noteProblem" />
+    }
+    else if (Family!.Can(FamilyPermission.ManageNotes))
+    {
+        <section class="panel">
+            <EditForm Model="Edit" FormName="save-note" OnValidSubmit="SaveAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="ActionProblem" />
+                <input type="hidden" name="Edit.ETag" value="@Edit!.ETag" />
+                <label for="note-title">Title</label>
+                <InputText id="note-title" @bind-Value="Edit!.Title" />
+                <ValidationMessage For="() => Edit!.Title" />
+                <label for="note-content">Note</label>
+                <InputTextArea id="note-content" @bind-Value="Edit!.Content" rows="12" />
+                <ValidationMessage For="() => Edit!.Content" />
+                <button type="submit" class="btn btn-primary">@(IsNew ? "Create note" : "Save changes")</button>
+            </EditForm>
+            @if (!IsNew)
+            {
+                <form method="post" @formname="delete-note" @onsubmit="DeleteAsync" class="danger-zone" data-enhance>
+                    <AntiforgeryToken />
+                    <button type="submit" class="btn btn-danger">Delete note</button>
+                </form>
+            }
+        </section>
+        @if (_note is not null)
+        {
+            <p class="muted small">Created by @Family!.NameOf(_note.CreatedByUserId) · last edited by @Family!.NameOf(_note.UpdatedByUserId), @Display.DateTime(_note.UpdatedAt, TimeZone)</p>
+        }
+    }
+    else if (_note is not null)
+    {
+        <article class="panel">
+            <h2>@_note.Title</h2>
+            <p class="prewrap">@_note.Content</p>
+            <p class="muted small">Last edited by @Family!.NameOf(_note.UpdatedByUserId), @Display.DateTime(_note.UpdatedAt, TimeZone)</p>
+        </article>
+    }
+</FamilyPage>
+
+@code {
+    private NoteResponse? _note;
+    private ApiProblem? _noteProblem;
+
+    [Parameter]
+    public Guid? NoteId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "save-note")]
+    private NoteForm? Edit { get; set; }
+
+    private bool IsNew => NoteId is null;
+
+    protected override async Task LoadAsync()
+    {
+        if (IsNew)
+        {
+            Edit ??= new();
+            return;
+        }
+
+        var result = await Api.GetNoteAsync(FamilyId, NoteId!.Value, Aborted);
+        _note = result.Value;
+        _noteProblem = result.Problem;
+        if (_note is not null)
+        {
+            Edit ??= FromNote(_note);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (IsNew)
+        {
+            var created = await Api.CreateNoteAsync(FamilyId, Edit!.ToRequest(), Aborted);
+            Complete(created.Problem, created.Value is { } note ? FamilyUrl($"/notes/{note.Id}") : null);
+            return;
+        }
+
+        var saved = await Api.UpdateNoteAsync(FamilyId, NoteId!.Value, Edit!.ToRequest(), Edit.ETag ?? string.Empty, Aborted);
+        if (saved.Problem?.IsConcurrencyConflict == true && _note is not null)
+        {
+            Edit = FromNote(_note);
+        }
+
+        Complete(saved.Problem);
+    }
+
+    private async Task DeleteAsync()
+    {
+        var deleted = await Api.DeleteNoteAsync(FamilyId, NoteId!.Value, Aborted);
+        Complete(deleted.Problem, FamilyUrl("/notes"));
+    }
+
+    private static NoteForm FromNote(NoteResponse note) => new() { Title = note.Title, Content = note.Content, ETag = note.ETag };
+}

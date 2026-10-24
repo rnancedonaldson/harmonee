@@ -1,0 +1,162 @@
+@page "/families/{FamilyId:guid}/shopping/{ListId:guid}"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="@(_list?.Name ?? "Shopping list")" RequiredPermission="FamilyPermission.ViewShoppingLists">
+    <p><a href="@FamilyUrl("/shopping")">← All lists</a></p>
+
+    @if (_list is null)
+    {
+        <ProblemAlert Problem="_listProblem" />
+    }
+    else
+    {
+        var canManage = Family!.Can(FamilyPermission.ManageShoppingLists);
+        <ProblemAlert Problem="ActionProblem" />
+
+        @if (canManage)
+        {
+            <section class="panel">
+                <EditForm Model="AddItem" FormName="add-item" OnValidSubmit="AddItemAsync" Enhance class="inline-form">
+                    <DataAnnotationsValidator />
+                    <label for="item-name" class="visually-hidden">Item</label>
+                    <InputText id="item-name" @bind-Value="AddItem!.Name" placeholder="Add an item, e.g. Milk" />
+                    <label for="item-qty" class="visually-hidden">Quantity</label>
+                    <InputText id="item-qty" @bind-Value="AddItem!.Quantity" placeholder="Qty (optional)" class="qty-input" />
+                    <button type="submit" class="btn btn-primary">Add</button>
+                    <ValidationMessage For="() => AddItem!.Name" />
+                </EditForm>
+            </section>
+        }
+
+        @if (_list.Items.Count == 0)
+        {
+            <p class="empty">This list is empty.</p>
+        }
+        else
+        {
+            <ul class="checklist" role="list">
+                @foreach (var item in _list.Items)
+                {
+                    <li class="@(item.IsChecked ? "checked" : null)">
+                        @if (canManage)
+                        {
+                            <form method="post" @formname="@($"toggle-{item.Id}")" @onsubmit="() => ToggleAsync(item)" data-enhance class="inline">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ItemAction.ItemId" value="@item.Id" />
+                                <input type="hidden" name="ItemAction.ETag" value="@item.ETag" />
+                                <input type="hidden" name="ItemAction.Check" value="@(item.IsChecked ? "false" : "true")" />
+                                <button type="submit" class="check-button" aria-pressed="@(item.IsChecked ? "true" : "false")"
+                                        aria-label="@(item.IsChecked ? $"Mark {item.Name} as not bought" : $"Mark {item.Name} as bought")">
+                                    <span aria-hidden="true">@(item.IsChecked ? "✓" : "")</span>
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="check-button" aria-hidden="true">@(item.IsChecked ? "✓" : "")</span>
+                        }
+                        <span class="item-name">@item.Name</span>
+                        @if (!string.IsNullOrEmpty(item.Quantity))
+                        {
+                            <span class="badge">@item.Quantity</span>
+                        }
+                        @if (canManage)
+                        {
+                            <form method="post" @formname="@($"remove-{item.Id}")" @onsubmit="() => RemoveAsync(item)" data-enhance class="inline push-right">
+                                <AntiforgeryToken />
+                                <button type="submit" class="btn btn-ghost btn-small" aria-label="@($"Remove {item.Name}")">Remove</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (canManage)
+        {
+            <details class="panel">
+                <summary>List settings</summary>
+                <EditForm Model="Rename" FormName="rename-list" OnValidSubmit="RenameAsync" Enhance class="inline-form">
+                    <DataAnnotationsValidator />
+                    <input type="hidden" name="Rename.ETag" value="@Rename!.ETag" />
+                    <label for="rename">Name</label>
+                    <InputText id="rename" @bind-Value="Rename!.Name" />
+                    <button type="submit" class="btn">Rename</button>
+                    <ValidationMessage For="() => Rename!.Name" />
+                </EditForm>
+                <form method="post" @formname="delete-list" @onsubmit="DeleteAsync" class="danger-zone" data-enhance>
+                    <AntiforgeryToken />
+                    <button type="submit" class="btn btn-danger">Delete this list</button>
+                </form>
+            </details>
+        }
+    }
+</FamilyPage>
+
+@code {
+    private ShoppingListResponse? _list;
+    private ApiProblem? _listProblem;
+
+    [Parameter]
+    public Guid ListId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "add-item")]
+    private ShoppingItemForm? AddItem { get; set; }
+
+    [SupplyParameterFromForm(FormName = "rename-list")]
+    private ShoppingListForm? Rename { get; set; }
+
+    // Bound from whichever per-item form was posted (toggle or remove).
+    [SupplyParameterFromForm]
+    private ShoppingItemAction? ItemAction { get; set; }
+
+    protected override async Task LoadAsync()
+    {
+        AddItem ??= new();
+        var result = await Api.GetShoppingListAsync(FamilyId, ListId, Aborted);
+        _list = result.Value;
+        _listProblem = result.Problem;
+        if (_list is not null)
+        {
+            Rename ??= new ShoppingListForm { Name = _list.Name, ETag = _list.ETag };
+        }
+    }
+
+    private async Task AddItemAsync()
+    {
+        var added = await Api.AddShoppingListItemAsync(FamilyId, ListId, new SaveShoppingListItemRequest(AddItem!.Name!.Trim(), AddItem.Quantity, false), Aborted);
+        Complete(added.Problem);
+    }
+
+    private async Task ToggleAsync(ShoppingListItemResponse item)
+    {
+        // Use the ETag the user saw, so ticking an item someone else just changed reports a conflict instead of overwriting.
+        var etag = ItemAction?.ItemId == item.Id ? ItemAction.ETag : item.ETag;
+        var check = ItemAction?.ItemId == item.Id ? ItemAction.Check : !item.IsChecked;
+        var updated = await Api.UpdateShoppingListItemAsync(
+            FamilyId, ListId, item.Id, new SaveShoppingListItemRequest(item.Name, item.Quantity, check), etag ?? string.Empty, Aborted);
+        Complete(updated.Problem);
+    }
+
+    private async Task RemoveAsync(ShoppingListItemResponse item)
+    {
+        var removed = await Api.DeleteShoppingListItemAsync(FamilyId, ListId, item.Id, Aborted);
+        Complete(removed.Problem);
+    }
+
+    private async Task RenameAsync()
+    {
+        var renamed = await Api.RenameShoppingListAsync(FamilyId, ListId, new SaveShoppingListRequest(Rename!.Name!.Trim()), Rename.ETag ?? string.Empty, Aborted);
+        if (renamed.Problem?.IsConcurrencyConflict == true && _list is not null)
+        {
+            Rename = new ShoppingListForm { Name = _list.Name, ETag = _list.ETag };
+        }
+
+        Complete(renamed.Problem);
+    }
+
+    private async Task DeleteAsync()
+    {
+        var deleted = await Api.DeleteShoppingListAsync(FamilyId, ListId, Aborted);
+        Complete(deleted.Problem, FamilyUrl("/shopping"));
+    }
+}

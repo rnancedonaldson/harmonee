@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>ASP.NET Core plumbing shared by API modules: result-to-HTTP mapping, ETags, current user, audit logging.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Harmonee.SharedKernel\Harmonee.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\Harmonee.Api.Contracts\Harmonee.Api.Contracts.csproj" />
+  </ItemGroup>
+</Project>

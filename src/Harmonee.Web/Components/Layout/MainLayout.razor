@@ -1,0 +1,79 @@
+@inherits LayoutComponentBase
+@inject UserSession Session
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" href="/">
+            <img src="favicon.svg" alt="" width="28" height="28" />
+            <span>Harmonee</span>
+        </a>
+
+        @if (_signedIn)
+        {
+            <nav class="header-nav" aria-label="Main">
+                @if (_me is not null)
+                {
+                    @foreach (var family in _me.Families)
+                    {
+                        <NavLink href="@($"families/{family.FamilyId}")" Match="NavLinkMatch.Prefix">@family.FamilyName</NavLink>
+                    }
+
+                    @if (_me.IsPlatformAdmin)
+                    {
+                        <NavLink href="admin" Match="NavLinkMatch.Prefix" class="admin-link">Admin</NavLink>
+                    }
+                }
+            </nav>
+            <div class="header-user">
+                <span class="user-name">@(_me?.DisplayName ?? _userName)</span>
+                <form method="post" action="authentication/logout">
+                    <AntiforgeryToken />
+                    <button type="submit" class="btn btn-ghost">Sign out</button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <a class="btn btn-primary" href="authentication/login">Sign in</a>
+        }
+    </div>
+</header>
+
+<main id="main" class="container" tabindex="-1">
+    @Body
+</main>
+
+<footer class="site-footer">
+    <div class="container">Harmonee — keep the family in tune.</div>
+</footer>
+
+@code {
+    private bool _signedIn;
+    private string? _userName;
+    private MeResponse? _me;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is null)
+        {
+            return;
+        }
+
+        var user = (await AuthenticationState).User;
+        _signedIn = user.Identity?.IsAuthenticated == true;
+        _userName = user.Identity?.Name;
+        if (_signedIn)
+        {
+            var me = await Session.GetMeAsync(HttpContext?.RequestAborted ?? default);
+            _me = me.Value;
+        }
+    }
+}

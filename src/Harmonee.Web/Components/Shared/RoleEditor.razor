@@ -1,0 +1,25 @@
+@* Inputs for a role (name + one checkbox per permission), named "RoleEdit.*" for the settings page's form binding. *@
+
+<label for="@($"role-name-{IdPrefix}")">Role name</label>
+<input id="@($"role-name-{IdPrefix}")" name="RoleEdit.Name" value="@Role.Name" required maxlength="@FieldLimits.NameMaxLength" />
+
+<fieldset class="permissions">
+    <legend>Permissions</legend>
+    @foreach (var permission in FamilyPermissions.All)
+    {
+        var id = $"perm-{IdPrefix}-{permission}";
+        <label class="checkbox" for="@id">
+            <input type="checkbox" id="@id" name="@($"RoleEdit.{permission}")" value="true" checked="@Role.Get(permission)" />
+            @FamilyPermissions.Describe(permission)
+        </label>
+    }
+</fieldset>
+
+@code {
+    [Parameter, EditorRequired]
+    public RoleForm Role { get; set; } = default!;
+
+    /// <summary>Makes element IDs unique when several editors are on one page.</summary>
+    [Parameter, EditorRequired]
+    public string IdPrefix { get; set; } = string.Empty;
+}
