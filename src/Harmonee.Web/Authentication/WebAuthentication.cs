@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Azure.Identity;
 using Harmonee.ServiceDefaults;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -14,6 +15,7 @@ namespace Harmonee.Web.Authentication;
 internal static class WebAuthentication
 {
     public const string ApiOptionsSection = "HarmoneeApi";
+    public const string TokenCacheConnectionName = "cache";
 
     public static WebApplicationBuilder AddWebAuthentication(this WebApplicationBuilder builder)
     {
@@ -33,6 +35,9 @@ internal static class WebAuthentication
             return builder;
         }
 
+        // Fill in credential defaults before Microsoft.Identity.Web binds the AzureAd section.
+        builder.Configuration.AddInMemoryCollection(WebClientCredentials.Resolve(builder.Configuration, builder.Environment));
+
         var scopes = builder.Configuration.GetSection($"{ApiOptionsSection}:Scopes").Get<string[]>() ?? [];
         builder.Services
             .AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
@@ -40,7 +45,7 @@ internal static class WebAuthentication
             .EnableTokenAcquisitionToCallDownstreamApi(scopes)
             .AddDistributedTokenCaches();
 
-        builder.Services.AddDistributedMemoryCache();
+        builder.AddTokenCacheStore();
         builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options =>
         {
             ConfigureCookie(options);
@@ -85,6 +90,29 @@ internal static class WebAuthentication
 
         var isLocal = returnUrl.StartsWith('/') && !returnUrl.StartsWith("//", StringComparison.Ordinal) && !returnUrl.StartsWith("/\\", StringComparison.Ordinal);
         return isLocal ? returnUrl : "/";
+    }
+
+    /// <summary>
+    /// Where the server-side token cache lives. With Redis configured (<c>ConnectionStrings:cache</c>), sessions survive
+    /// restarts and work across replicas; otherwise tokens are kept in memory, which suits local development and a
+    /// single replica. A connection string without a password authenticates with the app's managed identity (Entra ID).
+    /// </summary>
+    private static void AddTokenCacheStore(this WebApplicationBuilder builder)
+    {
+        var connectionString = builder.Configuration.GetConnectionString(TokenCacheConnectionName);
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            builder.Services.AddDistributedMemoryCache();
+            return;
+        }
+
+        var redis = builder.AddRedisClientBuilder(TokenCacheConnectionName);
+        if (!connectionString.Contains("password=", StringComparison.OrdinalIgnoreCase))
+        {
+            redis.WithAzureAuthentication(new DefaultAzureCredential());
+        }
+
+        redis.WithDistributedCache();
     }
 
     private static void ConfigureCookie(CookieAuthenticationOptions options)

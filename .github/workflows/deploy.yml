@@ -1,0 +1,96 @@
+name: deploy
+
+# Build once, deploy many: every green CI run on main builds the container images once, deploys them to dev, then
+# (after a required reviewer approves the "prod" environment) promotes the same images to prod.
+# Azure access uses OpenID Connect workload identity federation: no secrets are stored in GitHub.
+# Setup: docs/deployment.md.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# No workflow-level concurrency: a prod deployment waiting for approval must not block later dev deployments.
+# Each environment job has its own concurrency group (deploy-environment.yml); a newer pending run replaces an older one.
+
+env:
+  CI: true
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build container images
+    # Only deploy commits whose CI passed (or a manual run).
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      sha: ${{ steps.tag.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - id: tag
+        name: Image tag (git SHA)
+        run: |
+          sha="$(git rev-parse HEAD)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Publish images (.NET SDK containers, no Dockerfile)
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/images"
+          for project in Harmonee.Api Harmonee.Web Harmonee.MigrationService; do
+            dotnet publish "src/$project/$project.csproj" --configuration Release \
+              -t:PublishContainer \
+              -p:ContainerImageTag="$TAG" \
+              -p:ContainerArchiveOutputPath="$RUNNER_TEMP/images/$project.tar"
+          done
+          ls -lh "$RUNNER_TEMP/images"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: images
+          path: ${{ runner.temp }}/images/*.tar
+          retention-days: 30
+          if-no-files-found: error
+
+  dev:
+    name: Deploy to dev
+    needs: build
+    uses: ./.github/workflows/deploy-environment.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      tag: ${{ needs.build.outputs.tag }}
+      ref: ${{ needs.build.outputs.sha }}
+
+  prod:
+    name: Deploy to prod
+    needs: [build, dev]
+    uses: ./.github/workflows/deploy-environment.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      tag: ${{ needs.build.outputs.tag }}
+      ref: ${{ needs.build.outputs.sha }}

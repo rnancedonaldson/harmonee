@@ -12,6 +12,10 @@ builder.AddFamiliesModule()
     .AddKitchenModule()
     .AddNotesModule();
 
+// In Azure: database users for the app identities (Database:Users), created after the schema is up to date.
+builder.Services.Configure<DatabaseUsersOptions>(builder.Configuration.GetSection(DatabaseUsersOptions.SectionName));
+builder.Services.AddTransient<DatabaseUserProvisioner>();
+
 builder.Services.AddHostedService<MigrationWorker>();
 
 await builder.Build().RunAsync();

@@ -154,4 +154,4 @@ dotnet test --solution Harmonee.slnx
 | `AADSTS65001` consent required | Grant admin consent for `Harmonee.Access` on the web app (§3.3 step 4). |
 | Signed in but every page says "You don't have permission" | The token is missing the `Harmonee.Access` scope. Check §3.3 step 4 and the `api-client-id` parameter. |
 | "Something went wrong" right after signing in (development mode) | The dev certificate isn't trusted. See §2. |
-| Signed out unexpectedly after restarting the app | Expected in local development: the token cache is in memory. Sign in again. |
+| Signed out unexpectedly after restarting the app | Expected in local development: the token cache is in memory. Sign in again. Set `ConnectionStrings:cache` (Redis) on the web app to keep it. |
