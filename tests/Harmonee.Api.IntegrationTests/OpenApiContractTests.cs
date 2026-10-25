@@ -1,5 +1,4 @@
 using System.Net;
-using System.Runtime.CompilerServices;
 using Harmonee.Api.IntegrationTests.Infrastructure;
 
 namespace Harmonee.Api.IntegrationTests;
@@ -32,6 +31,21 @@ public sealed class OpenApiContractTests(HarmoneeApiFactory factory)
 
     private static string Normalize(string json) => json.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd() + "\n";
 
-    private static string SnapshotPath([CallerFilePath] string sourceFile = "") =>
-        Path.Combine(Path.GetDirectoryName(sourceFile)!, "Snapshots", "openapi.v1.json");
+    /// <summary>
+    /// Finds the committed snapshot by walking up from the test binaries to the repository root.
+    /// ([CallerFilePath] can't be used: CI builds map source paths to "/_/" for deterministic output.)
+    /// </summary>
+    private static string SnapshotPath()
+    {
+        var relative = Path.Combine("tests", "Harmonee.Api.IntegrationTests", "Snapshots", "openapi.v1.json");
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Harmonee.slnx")))
+            {
+                return Path.Combine(directory.FullName, relative);
+            }
+        }
+
+        throw new InvalidOperationException("Could not find the repository root (Harmonee.slnx) above " + AppContext.BaseDirectory);
+    }
 }

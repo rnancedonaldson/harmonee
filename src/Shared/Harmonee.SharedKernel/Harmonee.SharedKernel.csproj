@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>Tiny set of primitives shared by every module. Keep it small: no business logic lives here.</Description>
-    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 </Project>

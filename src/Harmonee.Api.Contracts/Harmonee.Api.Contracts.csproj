@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Description>HTTP request/response contracts for the Harmonee API. Shared with first-party clients (web, mobile). Dependency-free by design.</Description>
-    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 </Project>

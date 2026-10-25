@@ -4,6 +4,10 @@
     <UserSecretsId>harmonee-web-3e9d0b14</UserSecretsId>
     <ContainerRepository>harmonee-web</ContainerRepository>
     <ContainerFamily>noble-chiseled-extra</ContainerFamily>
+    <!-- Blazor adds an SDK-versioned package (Microsoft.AspNetCore.App.Internal.Assets), so the lock file would differ
+         between SDK patch versions. Versions are still pinned by Central Package Management. -->
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <RestoreLockedMode>false</RestoreLockedMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Web" />
