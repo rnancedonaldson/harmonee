@@ -3,7 +3,7 @@ using Harmonee.SharedKernel.AspNetCore;
 
 namespace Harmonee.MigrationService;
 
-/// <summary>Runs each module's migrations in turn, then stops the host. A failure exits non-zero so the API never starts on a bad schema.</summary>
+/// <summary>Runs each module's migrations in turn, ensures the app identities have database users, then stops the host. A failure exits non-zero so the API never starts on a bad schema.</summary>
 internal sealed partial class MigrationWorker(
     IServiceProvider services,
     IHostApplicationLifetime lifetime,
@@ -22,6 +22,8 @@ internal sealed partial class MigrationWorker(
                 LogMigrating(logger, migrator.Name);
                 await migrator.MigrateAsync(stoppingToken);
             }
+
+            await scope.ServiceProvider.GetRequiredService<DatabaseUserProvisioner>().EnsureAsync(stoppingToken);
 
             LogCompleted(logger);
         }

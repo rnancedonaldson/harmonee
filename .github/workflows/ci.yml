@@ -71,3 +71,21 @@ jobs:
           name: test-results
           path: TestResults
           if-no-files-found: ignore
+
+  infra:
+    name: Lint infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Rules set to "error" in infra/bicepconfig.json fail the job.
+      - name: Bicep lint and build
+        run: |
+          az bicep install
+          az bicep version
+          az bicep lint --file infra/main.bicep
+          az bicep build --file infra/main.bicep --stdout > /dev/null
+          for environment in dev prod; do
+            az bicep build-params --file "infra/main.$environment.bicepparam" --stdout > /dev/null
+          done

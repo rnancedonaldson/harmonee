@@ -28,7 +28,7 @@ flowchart LR
 - **API = modular monolith.** The Families, Calendar, Kitchen and Notes modules each own a database schema. Every family-scoped endpoint checks membership and the caller's role permission.
 - **Aspire** runs everything locally with a dashboard for logs, traces and metrics, and models the Azure deployment.
 
-Read more in [Architecture](docs/architecture.md) and the [decision records](docs/adr/).
+Read more in [Architecture](docs/architecture.md) and the [decision records](docs/adr/). To run it in Azure, see [Deploying to Azure](docs/deployment.md).
 
 ## Repository layout
 
@@ -42,7 +42,8 @@ Read more in [Architecture](docs/architecture.md) and the [decision records](doc
 | `src/Harmonee.MigrationService` | Applies database migrations, then exits |
 | `src/Shared/*` | Shared kernel, ASP.NET Core plumbing, Aspire service defaults |
 | `tests/*` | Unit, integration (real SQL Server), architecture, and component tests |
-| `docs/` | Getting started, architecture, ADRs, roadmap, engineering handbook |
+| `infra/` | Azure infrastructure (Bicep, Azure Verified Modules) with dev and prod parameters |
+| `docs/` | Getting started, deployment, architecture, ADRs, roadmap, engineering handbook |
 
 ## Development
 

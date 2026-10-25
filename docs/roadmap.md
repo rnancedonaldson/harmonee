@@ -4,8 +4,8 @@ The MVP is a foundation. These are the next steps, roughly in priority order. Ea
 
 ## Next
 
-1. **Deploy to Azure.** Container Apps (API, web; migrations as a Container Apps Job), Azure SQL with Entra-only auth and managed identity, Front Door + WAF, Key Vault, App Configuration, Application Insights. Use `azd` with Aspire-generated Bicep, then own the Bicep (Azure Verified Modules). Add a deploy workflow with OIDC workload identity federation and environment approvals. *ADR: hosting topology.*
-2. **Production BFF hardening.** Federated credential (managed identity) instead of the web app's client secret; Redis-backed distributed token cache (Azure Managed Redis); Data Protection keys in Blob + Key Vault.
+1. **Deploy to Azure.** *Infrastructure and pipeline done* ([deployment guide](deployment.md), [ADR 0008](adr/0008-azure-hosting-topology.md)): Container Apps (web, internal API, migrations job), Azure SQL with Entra-only auth, Key Vault, App Configuration, Application Insights, and an OIDC deploy workflow with environment approvals. Remaining: **Front Door + WAF** and a custom domain in front of the web app; read **App Configuration** (and feature flags) from the apps; alerts and budgets; PSRule for Azure in CI.
+2. **Production BFF hardening.** *Mostly done:* managed identity federated credential (or Key Vault certificate) instead of a client secret, Redis token cache (Azure Managed Redis, prod), Data Protection keys in Blob + Key Vault. Remaining: confirm the External ID tenant topology for the federated credential (see [deployment §3.2](deployment.md#32-web-app-credential-option-a-managed-identity-federated-credential-default)).
 3. **Persisted audit log.** Store audit events in an append-only table (or Log Analytics with retention locks) and show recent admin actions in the admin panel.
 4. **Family deletion and other cross-module events.** Introduce a transactional outbox and in-process or Service Bus integration events (`FamilyDeleted`, `MemberRemoved`) so modules can clean up their own data.
 

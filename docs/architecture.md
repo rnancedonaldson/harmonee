@@ -119,6 +119,8 @@ The UI hides what you can't do, but that's cosmetic: the API is the authority.
 5. The web app redirects (Post/Redirect/Get) and the page re-renders with the new item.
 6. The whole flow is one distributed trace in the Aspire dashboard / Application Insights.
 
-## 8. Deployment (next step)
+## 8. Deployment
 
-The Aspire AppHost already models Azure SQL. The planned target is Azure Container Apps (API, web, and migrations as a job) behind Azure Front Door, with managed identities, Key Vault and App Configuration, provisioned with `azd`/Bicep. See [the roadmap](roadmap.md). In production, the web app should use a **certificate or managed-identity federated credential** instead of a client secret, and **Data Protection keys** in Blob Storage protected by Key Vault (already supported via `DataProtection:BlobUri` / `DataProtection:KeyVaultKeyUri`).
+Harmonee runs on **Azure Container Apps**: the web app has public ingress, the API has internal ingress only, and migrations run as a **Container Apps Job** before each API update. Data lives in **Azure SQL** with Entra-only authentication. Each workload has its own managed identity, and there are no secrets in configuration. The web app authenticates to Entra External ID with a **managed identity federated credential** (or a Key Vault certificate when the tenants differ). It keeps **Data Protection keys** in Blob Storage, wrapped by a Key Vault key, and uses **Azure Managed Redis** as its token cache in prod. Infrastructure is Bicep using Azure Verified Modules in [`infra/`](../infra/), deployed by [`deploy.yml`](../.github/workflows/deploy.yml) with OIDC workload identity federation: dev on every green `main` build, then prod after approval.
+
+See [Deploying to Azure](deployment.md) for setup and [ADR 0008](adr/0008-azure-hosting-topology.md) for the decisions. Front Door + WAF is the next step.

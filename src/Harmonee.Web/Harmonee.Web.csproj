@@ -14,6 +14,8 @@
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" />
+    <PackageReference Include="Aspire.Microsoft.Azure.StackExchangeRedis" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />

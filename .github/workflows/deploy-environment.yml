@@ -1,0 +1,201 @@
+name: deploy-environment
+
+# Reusable: deploys one environment from images built by deploy.yml.
+#   1. push the images to this environment's registry (creating the infrastructure first on the very first run)
+#   2. Bicep what-if, then deploy the infrastructure (the migrations job gets the new image; apps keep theirs)
+#   3. run the migrations job and wait for it
+#   4. deploy again with the new API and web images, then smoke-test the web app
+# Configuration lives in the GitHub environment (vars only, no secrets). See docs/deployment.md.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment and infra/main.<environment>.bicepparam to use.
+        type: string
+        required: true
+      tag:
+        description: Image tag built by deploy.yml (the git SHA).
+        type: string
+        required: true
+      ref:
+        description: Commit to deploy the infrastructure from.
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ steps.apps.outputs.web-url }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token for azure/login
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    defaults:
+      run:
+        shell: bash # -eo pipefail
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      PARAMETERS: infra/main.${{ inputs.environment }}.bicepparam
+      TAG: ${{ inputs.tag }}
+      # Read by readEnvironmentVariable() in the .bicepparam files.
+      ENTRA_INSTANCE: ${{ vars.ENTRA_INSTANCE }}
+      ENTRA_TENANT_ID: ${{ vars.ENTRA_TENANT_ID }}
+      ENTRA_API_CLIENT_ID: ${{ vars.ENTRA_API_CLIENT_ID }}
+      ENTRA_WEB_CLIENT_ID: ${{ vars.ENTRA_WEB_CLIENT_ID }}
+      WEB_CLIENT_CREDENTIAL: ${{ vars.WEB_CLIENT_CREDENTIAL || 'ManagedIdentity' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: images
+          path: ${{ runner.temp }}/images
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Prepare Azure CLI
+        run: |
+          missing=0
+          for name in AZURE_RESOURCE_GROUP ENTRA_INSTANCE ENTRA_TENANT_ID ENTRA_API_CLIENT_ID ENTRA_WEB_CLIENT_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Variable '$name' is not set on the GitHub environment. See docs/deployment.md."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
+          az config set extension.use_dynamic_install=yes_without_prompt --only-show-errors
+          az extension add --name containerapp --upgrade --only-show-errors
+          az bicep install
+
+      - id: current
+        name: Look up what is running
+        run: |
+          image_of() {
+            az containerapp list --resource-group "$AZURE_RESOURCE_GROUP" \
+              --query "[?tags.\"harmonee-component\"=='$1'] | [0].properties.template.containers[0].image" --output tsv
+          }
+          registry="$(az acr list --resource-group "$AZURE_RESOURCE_GROUP" --query "[0].name" --output tsv)"
+          echo "registry=$registry" >> "$GITHUB_OUTPUT"
+          echo "api-image=$(image_of api)" >> "$GITHUB_OUTPUT"
+          echo "web-image=$(image_of web)" >> "$GITHUB_OUTPUT"
+
+      - id: bootstrap
+        name: First deployment - create infrastructure (no apps yet)
+        if: steps.current.outputs.registry == ''
+        run: |
+          registry="$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "harmonee-bootstrap-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --parameters "$PARAMETERS" \
+            --query properties.outputs.registryName.value --output tsv)"
+          echo "registry=$registry" >> "$GITHUB_OUTPUT"
+
+      - id: push
+        name: Push images to the registry
+        env:
+          REGISTRY: ${{ steps.current.outputs.registry || steps.bootstrap.outputs.registry }}
+        run: |
+          login_server="$(az acr show --name "$REGISTRY" --query loginServer --output tsv)"
+          az acr login --name "$REGISTRY"
+          for archive in "$RUNNER_TEMP"/images/*.tar; do
+            source_image="$(docker load --input "$archive" | sed -n 's/^Loaded image: //p')"
+            target_image="$login_server/$source_image"
+            docker tag "$source_image" "$target_image"
+            docker push "$target_image"
+          done
+          echo "api-image=$login_server/harmonee-api:$TAG" >> "$GITHUB_OUTPUT"
+          echo "web-image=$login_server/harmonee-web:$TAG" >> "$GITHUB_OUTPUT"
+          echo "migrations-image=$login_server/harmonee-migrations:$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: What-if
+        env:
+          # Apps keep their current image until migrations have run; the job gets the new one.
+          HARMONEE_API_IMAGE: ${{ steps.current.outputs.api-image }}
+          HARMONEE_WEB_IMAGE: ${{ steps.current.outputs.web-image }}
+          HARMONEE_MIGRATIONS_IMAGE: ${{ steps.push.outputs.migrations-image }}
+        run: |
+          az deployment group what-if \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --parameters "$PARAMETERS" \
+            --exclude-change-types NoChange Ignore \
+            | tee "$RUNNER_TEMP/what-if.txt"
+          {
+            echo "## What-if: ${{ inputs.environment }}"
+            echo '```'
+            cat "$RUNNER_TEMP/what-if.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - id: infra
+        name: Deploy infrastructure
+        env:
+          HARMONEE_API_IMAGE: ${{ steps.current.outputs.api-image }}
+          HARMONEE_WEB_IMAGE: ${{ steps.current.outputs.web-image }}
+          HARMONEE_MIGRATIONS_IMAGE: ${{ steps.push.outputs.migrations-image }}
+        run: |
+          job="$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "harmonee-infra-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --parameters "$PARAMETERS" \
+            --query properties.outputs.migrationsJobName.value --output tsv)"
+          echo "migrations-job=$job" >> "$GITHUB_OUTPUT"
+
+      - name: Run database migrations
+        env:
+          JOB: ${{ steps.infra.outputs.migrations-job }}
+        run: |
+          execution="$(az containerapp job start --resource-group "$AZURE_RESOURCE_GROUP" --name "$JOB" --query name --output tsv)"
+          echo "Started $JOB execution $execution"
+          for _ in $(seq 1 120); do
+            status="$(az containerapp job execution show --resource-group "$AZURE_RESOURCE_GROUP" --name "$JOB" \
+              --job-execution-name "$execution" --query properties.status --output tsv)"
+            echo "Status: $status"
+            case "$status" in
+              Succeeded) exit 0 ;;
+              Failed|Stopped|Degraded)
+                echo "::error::Migrations $status. Logs: Container Apps job '$JOB', execution '$execution' (Log Analytics table ContainerAppConsoleLogs_CL)."
+                exit 1 ;;
+            esac
+            sleep 15
+          done
+          echo "::error::Migrations did not finish within 30 minutes."
+          exit 1
+
+      - id: apps
+        name: Update container apps
+        env:
+          HARMONEE_API_IMAGE: ${{ steps.push.outputs.api-image }}
+          HARMONEE_WEB_IMAGE: ${{ steps.push.outputs.web-image }}
+          HARMONEE_MIGRATIONS_IMAGE: ${{ steps.push.outputs.migrations-image }}
+        run: |
+          web_url="$(az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --name "harmonee-apps-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --parameters "$PARAMETERS" \
+            --query properties.outputs.webUrl.value --output tsv)"
+          echo "web-url=$web_url" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test
+        env:
+          WEB_URL: ${{ steps.apps.outputs.web-url }}
+        run: |
+          curl --fail --silent --show-error --retry 12 --retry-delay 10 --retry-all-errors "$WEB_URL/health/ready"
+          echo
+          echo "Deployed ${{ inputs.tag }} to ${{ inputs.environment }}: $WEB_URL" >> "$GITHUB_STEP_SUMMARY"
