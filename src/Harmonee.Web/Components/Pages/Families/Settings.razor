@@ -231,9 +231,10 @@
 
     private async Task UpdateRoleAsync()
     {
-        if (RoleEdit?.RoleId is not { } roleId || FormValidation.FirstError(RoleEdit) is { } error)
+        var error = ValidateRoleForm();
+        if (error is not null || RoleEdit!.RoleId is not { } roleId)
         {
-            ActionProblem = Invalid(RoleEdit is null ? "The role couldn't be read." : FormValidation.FirstError(RoleEdit)!);
+            ActionProblem = Invalid(error ?? "The role couldn't be read.");
             return;
         }
 
@@ -243,15 +244,20 @@
 
     private async Task CreateRoleAsync()
     {
-        if (RoleEdit is null || FormValidation.FirstError(RoleEdit) is { } error)
+        var error = ValidateRoleForm();
+        if (error is not null)
         {
-            ActionProblem = Invalid(RoleEdit is null ? "The role couldn't be read." : FormValidation.FirstError(RoleEdit)!);
+            ActionProblem = Invalid(error);
             return;
         }
 
-        var result = await Api.CreateRoleAsync(FamilyId, RoleEdit.ToRequest(), Aborted);
+        var result = await Api.CreateRoleAsync(FamilyId, RoleEdit!.ToRequest(), Aborted);
         Complete(result.Problem);
     }
+
+    /// <summary>Returns the first problem with the posted role form, or null when it's valid.</summary>
+    private string? ValidateRoleForm() =>
+        RoleEdit is null ? "The role couldn't be read." : FormValidation.FirstError(RoleEdit);
 
     private async Task DeleteRoleAsync(FamilyRoleResponse role)
     {

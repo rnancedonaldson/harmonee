@@ -37,12 +37,12 @@ public sealed class OpenApiContractTests(HarmoneeApiFactory factory)
     /// </summary>
     private static string SnapshotPath()
     {
-        var relative = Path.Combine("tests", "Harmonee.Api.IntegrationTests", "Snapshots", "openapi.v1.json");
+        // Path.Join (not Combine): every segment is relative, and Join never discards earlier segments.
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "Harmonee.slnx")))
+            if (File.Exists(Path.Join(directory.FullName, "Harmonee.slnx")))
             {
-                return Path.Combine(directory.FullName, relative);
+                return Path.Join(directory.FullName, "tests", "Harmonee.Api.IntegrationTests", "Snapshots", "openapi.v1.json");
             }
         }
 
