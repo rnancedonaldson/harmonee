@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <Description>Harmonee HTTP API: composes the modules into a single deployable (modular monolith).</Description>
+    <UserSecretsId>harmonee-api-7c1f6a52</UserSecretsId>
+    <ContainerRepository>harmonee-api</ContainerRepository>
+    <ContainerFamily>noble-chiseled-extra</ContainerFamily>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Http" />
+    <PackageReference Include="Asp.Versioning.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Identity.Web" />
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Modules\Families\Harmonee.Families\Harmonee.Families.csproj" />
+    <ProjectReference Include="..\Modules\Calendar\Harmonee.Calendar\Harmonee.Calendar.csproj" />
+    <ProjectReference Include="..\Modules\Kitchen\Harmonee.Kitchen\Harmonee.Kitchen.csproj" />
+    <ProjectReference Include="..\Modules\Notes\Harmonee.Notes\Harmonee.Notes.csproj" />
+  </ItemGroup>
+</Project>

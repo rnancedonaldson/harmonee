@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+  <PropertyGroup>
+    <Description>Applies every module's database migrations, then exits. Runs before the API in the Aspire app model.</Description>
+    <ContainerRepository>harmonee-migrations</ContainerRepository>
+    <ContainerFamily>noble-chiseled-extra</ContainerFamily>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\Harmonee.ServiceDefaults\Harmonee.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Modules\Families\Harmonee.Families\Harmonee.Families.csproj" />
+    <ProjectReference Include="..\Modules\Calendar\Harmonee.Calendar\Harmonee.Calendar.csproj" />
+    <ProjectReference Include="..\Modules\Kitchen\Harmonee.Kitchen\Harmonee.Kitchen.csproj" />
+    <ProjectReference Include="..\Modules\Notes\Harmonee.Notes\Harmonee.Notes.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,37 @@
+@page "/development/sign-in"
+@using Harmonee.Web.Authentication
+@inject IServiceProvider Services
+
+<PageTitle>Development sign-in · Harmonee</PageTitle>
+
+<section class="panel narrow">
+    @if (Services.GetService<IApiAccessTokenProvider>() is DevelopmentAccessTokenProvider)
+    {
+        <h1>Development sign-in</h1>
+        <div class="alert alert-info" role="status">
+            Local development only. Pick any name — the same name always signs you in as the same person.
+            Configure Entra External ID to use real accounts (see <code>docs/getting-started.md</code>).
+        </div>
+        <form method="post" action="authentication/development/sign-in">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+            <label for="dev-name">Display name</label>
+            <input id="dev-name" name="name" required maxlength="60" placeholder="Alex" autocomplete="off" />
+            <label class="checkbox">
+                <input type="checkbox" name="isAdmin" value="true" />
+                Sign in as a platform administrator
+            </label>
+            <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+    }
+    else
+    {
+        <h1>Not available</h1>
+        <p>Development sign-in is disabled. <a href="authentication/login">Sign in</a> instead.</p>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+}

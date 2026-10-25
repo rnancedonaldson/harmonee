@@ -1,0 +1,21 @@
+@page "/error"
+@using System.Diagnostics
+
+<PageTitle>Error · Harmonee</PageTitle>
+
+<h1>Something went wrong</h1>
+<p>Sorry about that. Please try again in a moment.</p>
+@if (!string.IsNullOrEmpty(_requestId))
+{
+    <p class="muted">If this keeps happening, quote reference <code>@_requestId</code>.</p>
+}
+
+@code {
+    private string? _requestId;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized() =>
+        _requestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

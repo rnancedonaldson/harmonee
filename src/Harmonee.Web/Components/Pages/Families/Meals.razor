@@ -1,0 +1,82 @@
+@page "/families/{FamilyId:guid}/meals"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Meal plan" RequiredPermission="FamilyPermission.ViewMealPlans">
+    <div class="toolbar">
+        <a class="btn btn-ghost" href="@FamilyUrl($"/meals?week={Display.Iso(_weekStart.AddDays(-7))}")">← Previous week</a>
+        <span class="range">Week of @Display.LongDay(_weekStart)</span>
+        <a class="btn btn-ghost" href="@FamilyUrl($"/meals?week={Display.Iso(_weekStart.AddDays(7))}")">Next week →</a>
+    </div>
+
+    <ProblemAlert Problem="_planProblem" />
+
+    <div class="week">
+        @for (var i = 0; i < 7; i++)
+        {
+            var date = _weekStart.AddDays(i);
+            var entries = _entries.Where(e => e.Date == date).ToList();
+            <section class="week-day @(date == _today ? "today" : null)">
+                <h2 class="day-heading">@Display.Day(date, _today) <span class="muted">@date.ToString("d MMM", CultureInfo.CurrentCulture)</span></h2>
+                @if (entries.Count == 0)
+                {
+                    <p class="muted small">Nothing planned</p>
+                }
+                else
+                {
+                    <ul class="list" role="list">
+                        @foreach (var entry in entries)
+                        {
+                            <li>
+                                <span class="meal-type">@entry.MealType</span>
+                                <a href="@FamilyUrl($"/meals/{entry.Id}")">@entry.Title</a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        }
+    </div>
+
+    @if (Family!.Can(FamilyPermission.ManageMealPlans))
+    {
+        <section class="panel">
+            <h2>Plan a meal</h2>
+            <EditForm Model="Add" FormName="add-meal" OnValidSubmit="AddAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="ActionProblem" />
+                <MealFields Model="Add!" />
+                <button type="submit" class="btn btn-primary">Add to plan</button>
+            </EditForm>
+        </section>
+    }
+</FamilyPage>
+
+@code {
+    private DateOnly _weekStart;
+    private DateOnly _today;
+    private IReadOnlyList<MealPlanEntryResponse> _entries = [];
+    private ApiProblem? _planProblem;
+
+    [SupplyParameterFromQuery(Name = "week")]
+    private string? WeekQuery { get; set; }
+
+    [SupplyParameterFromForm(FormName = "add-meal", Name = "Model")]
+    private MealForm? Add { get; set; }
+
+    protected override async Task LoadAsync()
+    {
+        _today = TimeZone.Today(Clock);
+        var anchor = DateOnly.TryParseExact(WeekQuery, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var week) ? week : _today;
+        _weekStart = anchor.AddDays(-(((int)anchor.DayOfWeek + 6) % 7)); // Monday
+        Add ??= new MealForm { Date = _today >= _weekStart && _today < _weekStart.AddDays(7) ? _today : _weekStart };
+
+        var result = await Api.GetMealPlanAsync(FamilyId, _weekStart, _weekStart.AddDays(6), Aborted);
+        _entries = result.Value?.Entries ?? [];
+        _planProblem = result.Problem;
+    }
+
+    private async Task AddAsync()
+    {
+        var created = await Api.CreateMealPlanEntryAsync(FamilyId, Add!.ToRequest(), Aborted);
+        Complete(created.Problem, FamilyUrl($"/meals?week={Display.Iso(Add.Date)}"));
+    }
+}

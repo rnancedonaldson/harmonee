@@ -1,0 +1,8 @@
+# Default owner for everything. Add teams/people per area as the project grows.
+* @rnancedonaldson
+
+# Security-sensitive areas: authorization, authentication, pipelines.
+/src/Modules/Families/Harmonee.Families.Contracts/ @rnancedonaldson
+/src/Harmonee.Api/ApiAuthentication.cs @rnancedonaldson
+/src/Harmonee.Web/Authentication/ @rnancedonaldson
+/.github/ @rnancedonaldson

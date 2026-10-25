@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Harmonee.Api.Contracts/Harmonee.Api.Contracts.csproj" />
+    <Project Path="src/Harmonee.Api/Harmonee.Api.csproj" />
+    <Project Path="src/Harmonee.AppHost/Harmonee.AppHost.csproj" />
+    <Project Path="src/Harmonee.MigrationService/Harmonee.MigrationService.csproj" />
+    <Project Path="src/Harmonee.Web/Harmonee.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Calendar/">
+    <Project Path="src/Modules/Calendar/Harmonee.Calendar/Harmonee.Calendar.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Families/">
+    <Project Path="src/Modules/Families/Harmonee.Families.Contracts/Harmonee.Families.Contracts.csproj" />
+    <Project Path="src/Modules/Families/Harmonee.Families/Harmonee.Families.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Kitchen/">
+    <Project Path="src/Modules/Kitchen/Harmonee.Kitchen/Harmonee.Kitchen.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notes/">
+    <Project Path="src/Modules/Notes/Harmonee.Notes/Harmonee.Notes.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/Harmonee.ServiceDefaults/Harmonee.ServiceDefaults.csproj" />
+    <Project Path="src/Shared/Harmonee.SharedKernel.AspNetCore/Harmonee.SharedKernel.AspNetCore.csproj" />
+    <Project Path="src/Shared/Harmonee.SharedKernel/Harmonee.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Harmonee.Api.IntegrationTests/Harmonee.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Harmonee.Architecture.Tests/Harmonee.Architecture.Tests.csproj" />
+    <Project Path="tests/Harmonee.Families.UnitTests/Harmonee.Families.UnitTests.csproj" />
+    <Project Path="tests/Harmonee.Web.Tests/Harmonee.Web.Tests.csproj" />
+  </Folder>
+</Solution>

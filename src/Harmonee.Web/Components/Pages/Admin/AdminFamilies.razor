@@ -1,0 +1,84 @@
+@page "/admin"
+@attribute [Authorize]
+@inject HarmoneeApiClient Api
+@inject UserSession Session
+@inject UserTimeZone TimeZone
+
+<PageTitle>Admin · Harmonee</PageTitle>
+
+<h1>Administration</h1>
+
+@if (_me is not null && !_me.IsPlatformAdmin)
+{
+    <div class="alert alert-info" role="status">This area is for platform administrators.</div>
+}
+else
+{
+    <p class="lead">Find any family to view or correct its data. Every action you take inside a family is audit-logged.</p>
+
+    <form method="get" class="inline-form panel" role="search">
+        <label for="search" class="visually-hidden">Search families by name</label>
+        <input id="search" name="search" value="@Search" placeholder="Search families by name" maxlength="@FieldLimits.NameMaxLength" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
+    <ProblemAlert Problem="_problem" />
+
+    @if (_page is not null)
+    {
+        @if (_page.Items.Count == 0)
+        {
+            <p class="empty">No families found.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead><tr><th scope="col">Family</th><th scope="col">Owners</th><th scope="col">Members</th><th scope="col">Created</th></tr></thead>
+                <tbody>
+                    @foreach (var family in _page.Items)
+                    {
+                        <tr>
+                            <th scope="row"><a href="@($"families/{family.Id}")">@family.Name</a></th>
+                            <td>@string.Join(", ", family.OwnerNames)</td>
+                            <td>@family.MemberCount</td>
+                            <td>@Display.DateTime(family.CreatedAt, TimeZone)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (_page.NextCursor is not null)
+            {
+                <p><a class="btn btn-ghost" href="@($"admin?search={Uri.EscapeDataString(Search ?? string.Empty)}&cursor={Uri.EscapeDataString(_page.NextCursor)}")">Next page →</a></p>
+            }
+        }
+    }
+}
+
+@code {
+    private MeResponse? _me;
+    private CursorPage<AdminFamilySummary>? _page;
+    private ApiProblem? _problem;
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromQuery(Name = "search")]
+    private string? Search { get; set; }
+
+    [SupplyParameterFromQuery(Name = "cursor")]
+    private string? Cursor { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var aborted = HttpContext?.RequestAborted ?? CancellationToken.None;
+        _me = (await Session.GetMeAsync(aborted)).Value;
+        if (_me?.IsPlatformAdmin != true)
+        {
+            return;
+        }
+
+        var result = await Api.AdminListFamiliesAsync(Search, Cursor, aborted);
+        _page = result.Value;
+        _problem = result.Problem;
+    }
+}

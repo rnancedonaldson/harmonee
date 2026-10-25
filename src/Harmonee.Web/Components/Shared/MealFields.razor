@@ -1,0 +1,30 @@
+@* Shared inputs for meal plan entries. Place inside an EditForm whose model is the same instance (bound with Name = "Model"). *@
+
+<div class="field-row">
+    <div>
+        <label for="meal-date">Day</label>
+        <InputDate id="meal-date" @bind-Value="Model.Date" />
+    </div>
+    <div>
+        <label for="meal-type">Meal</label>
+        <InputSelect id="meal-type" @bind-Value="Model.MealType">
+            @foreach (var type in Enum.GetValues<MealType>())
+            {
+                <option value="@type">@type</option>
+            }
+        </InputSelect>
+    </div>
+</div>
+
+<label for="meal-title">What's cooking?</label>
+<InputText id="meal-title" @bind-Value="Model.Title" placeholder="Spaghetti bolognese" />
+<ValidationMessage For="() => Model.Title" />
+
+<label for="meal-notes">Notes <span class="muted">(optional)</span></label>
+<InputTextArea id="meal-notes" @bind-Value="Model.Notes" rows="2" placeholder="Who's cooking, recipe link…" />
+<ValidationMessage For="() => Model.Notes" />
+
+@code {
+    [Parameter, EditorRequired]
+    public MealForm Model { get; set; } = default!;
+}

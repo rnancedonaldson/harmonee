@@ -1,0 +1,76 @@
+@page "/families/{FamilyId:guid}/meals/{EntryId:guid}"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Meal" RequiredPermission="FamilyPermission.ViewMealPlans">
+    <p><a href="@FamilyUrl(_entry is null ? "/meals" : $"/meals?week={Display.Iso(_entry.Date)}")">← Back to meal plan</a></p>
+
+    @if (_entry is null)
+    {
+        <ProblemAlert Problem="_entryProblem" />
+    }
+    else if (Family!.Can(FamilyPermission.ManageMealPlans))
+    {
+        <section class="panel">
+            <EditForm Model="Edit" FormName="edit-meal" OnValidSubmit="SaveAsync" Enhance>
+                <DataAnnotationsValidator />
+                <ProblemAlert Problem="ActionProblem" />
+                <input type="hidden" name="Model.ETag" value="@Edit!.ETag" />
+                <MealFields Model="Edit" />
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </EditForm>
+            <form method="post" @formname="delete-meal" @onsubmit="DeleteAsync" class="danger-zone" data-enhance>
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-danger">Remove from plan</button>
+            </form>
+        </section>
+    }
+    else
+    {
+        <section class="panel">
+            <h2>@_entry.Title</h2>
+            <p class="when">@Display.LongDay(_entry.Date) · @_entry.MealType</p>
+            @if (!string.IsNullOrEmpty(_entry.Notes))
+            {
+                <p class="prewrap">@_entry.Notes</p>
+            }
+        </section>
+    }
+</FamilyPage>
+
+@code {
+    private MealPlanEntryResponse? _entry;
+    private ApiProblem? _entryProblem;
+
+    [Parameter]
+    public Guid EntryId { get; set; }
+
+    [SupplyParameterFromForm(FormName = "edit-meal", Name = "Model")]
+    private MealForm? Edit { get; set; }
+
+    protected override async Task LoadAsync()
+    {
+        var result = await Api.GetMealPlanEntryAsync(FamilyId, EntryId, Aborted);
+        _entry = result.Value;
+        _entryProblem = result.Problem;
+        if (_entry is not null)
+        {
+            Edit ??= MealForm.From(_entry);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        var saved = await Api.UpdateMealPlanEntryAsync(FamilyId, EntryId, Edit!.ToRequest(), Edit.ETag ?? string.Empty, Aborted);
+        if (saved.Problem?.IsConcurrencyConflict == true && _entry is not null)
+        {
+            Edit = MealForm.From(_entry);
+        }
+
+        Complete(saved.Problem, FamilyUrl($"/meals?week={Display.Iso(Edit.Date)}"));
+    }
+
+    private async Task DeleteAsync()
+    {
+        var deleted = await Api.DeleteMealPlanEntryAsync(FamilyId, EntryId, Aborted);
+        Complete(deleted.Problem, FamilyUrl(_entry is null ? "/meals" : $"/meals?week={Display.Iso(_entry.Date)}"));
+    }
+}

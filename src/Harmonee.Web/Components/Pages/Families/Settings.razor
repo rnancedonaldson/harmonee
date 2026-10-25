@@ -1,0 +1,270 @@
+@page "/families/{FamilyId:guid}/settings"
+
+<FamilyPage Family="Family" Problem="LoadProblem" Title="Members & roles">
+    @{
+        var family = Family!;
+        var canManageMembers = family.Can(FamilyPermission.ManageMembers);
+        var canManageRoles = family.Can(FamilyPermission.ManageRoles);
+        var canActAsOwner = family.CanActAsOwner();
+    }
+
+    <ProblemAlert Problem="ActionProblem" />
+
+    <section class="panel">
+        <h2>Your access</h2>
+        <p>
+            @if (family.MyAccess.IsAdminOverride)
+            {
+                <span>Platform administrator — full access.</span>
+            }
+            else if (family.MyAccess.IsOwner)
+            {
+                <span>You're an <strong>owner</strong> of this family — you can do everything.</span>
+            }
+            else
+            {
+                <span>Your role: <strong>@family.Members.FirstOrDefault(m => m.MemberId == family.MyAccess.MemberId)?.RoleName</strong></span>
+            }
+        </p>
+        <PermissionList Permissions="family.MyAccess.Permissions" />
+        @if (family.MyAccess.MemberId is { } myMemberId)
+        {
+            <form method="post" @formname="leave" @onsubmit="() => LeaveAsync(myMemberId)" class="danger-zone" data-enhance>
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-danger">Leave this family</button>
+            </form>
+        }
+    </section>
+
+    @if (canActAsOwner)
+    {
+        <section class="panel">
+            <h2>Family settings</h2>
+            <EditForm Model="FamilySettings" FormName="family-settings" OnValidSubmit="SaveSettingsAsync" Enhance>
+                <DataAnnotationsValidator />
+                <label for="family-name">Family name</label>
+                <InputText id="family-name" @bind-Value="FamilySettings!.Name" />
+                <ValidationMessage For="() => FamilySettings!.Name" />
+                <label for="default-role">Role for people who join with the invite code</label>
+                <InputSelect id="default-role" @bind-Value="FamilySettings!.DefaultRoleId">
+                    @foreach (var role in family.Roles)
+                    {
+                        <option value="@role.Id">@role.Name</option>
+                    }
+                </InputSelect>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </section>
+    }
+
+    @if (canManageMembers && family.InviteCode is not null)
+    {
+        <section class="panel">
+            <h2>Invite people</h2>
+            <p>Share this code. People who join get the <strong>@family.Roles.Single(r => r.Id == family.DefaultRoleId).Name</strong> role.</p>
+            <p class="invite-code" data-testid="invite-code">@family.InviteCode</p>
+            <form method="post" @formname="regenerate-invite" @onsubmit="RegenerateAsync" data-enhance>
+                <AntiforgeryToken />
+                <button type="submit" class="btn">Generate a new code</button>
+                <span class="muted small">The current code will stop working.</span>
+            </form>
+        </section>
+    }
+
+    <section class="panel">
+        <h2>Members</h2>
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Owner</th>@if (canManageMembers) { <th scope="col"><span class="visually-hidden">Actions</span></th> }</tr>
+            </thead>
+            <tbody>
+                @foreach (var member in family.Members)
+                {
+                    var editable = canManageMembers && (!member.IsOwner || canActAsOwner);
+                    <tr>
+                        <th scope="row">@member.DisplayName @if (member.MemberId == family.MyAccess.MemberId) { <span class="badge">You</span> }</th>
+                        @if (editable)
+                        {
+                            <td colspan="2">
+                                <form method="post" @formname="@($"member-{member.MemberId}")" @onsubmit="UpdateMemberAsync" class="inline-form" data-enhance>
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="MemberEdit.MemberId" value="@member.MemberId" />
+                                    <label class="visually-hidden" for="@($"role-{member.MemberId}")">Role for @member.DisplayName</label>
+                                    <select id="@($"role-{member.MemberId}")" name="MemberEdit.RoleId">
+                                        @foreach (var role in family.Roles)
+                                        {
+                                            <option value="@role.Id" selected="@(role.Id == member.RoleId)">@role.Name</option>
+                                        }
+                                    </select>
+                                    <label class="checkbox">
+                                        <input type="checkbox" name="MemberEdit.IsOwner" value="true" checked="@member.IsOwner" disabled="@(!canActAsOwner)" />
+                                        Owner
+                                    </label>
+                                    @if (!canActAsOwner)
+                                    {
+                                        <input type="hidden" name="MemberEdit.IsOwner" value="false" />
+                                    }
+                                    <button type="submit" class="btn btn-small">Save</button>
+                                </form>
+                            </td>
+                            <td>
+                                @if (member.MemberId != family.MyAccess.MemberId)
+                                {
+                                    <form method="post" @formname="@($"remove-{member.MemberId}")" @onsubmit="() => RemoveAsync(member)" class="inline" data-enhance>
+                                        <AntiforgeryToken />
+                                        <button type="submit" class="btn btn-ghost btn-small">Remove</button>
+                                    </form>
+                                }
+                            </td>
+                        }
+                        else
+                        {
+                            <td>@(member.IsOwner ? "—" : member.RoleName)</td>
+                            <td>@(member.IsOwner ? "Yes" : "No")</td>
+                            @if (canManageMembers)
+                            {
+                                <td></td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p class="muted small">Owners always have every permission, whatever their role.</p>
+    </section>
+
+    <section class="panel">
+        <h2>Roles</h2>
+        @foreach (var role in family.Roles)
+        {
+            <div class="role">
+                @if (canManageRoles)
+                {
+                    <form method="post" @formname="@($"role-{role.Id}")" @onsubmit="UpdateRoleAsync" data-enhance>
+                        <AntiforgeryToken />
+                        <input type="hidden" name="RoleEdit.RoleId" value="@role.Id" />
+                        <RoleEditor Role="RoleForm.From(role)" IdPrefix="@role.Id.ToString("N")" />
+                        <p class="muted small">@role.MemberCount member(s)@(role.Id == family.DefaultRoleId ? " · default for new members" : "")</p>
+                        <button type="submit" class="btn btn-small">Save role</button>
+                    </form>
+                    @if (role.MemberCount == 0 && role.Id != family.DefaultRoleId)
+                    {
+                        <form method="post" @formname="@($"delete-role-{role.Id}")" @onsubmit="() => DeleteRoleAsync(role)" data-enhance>
+                            <AntiforgeryToken />
+                            <button type="submit" class="btn btn-ghost btn-small">Delete role</button>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <h3>@role.Name</h3>
+                    <PermissionList Permissions="role.Permissions" />
+                }
+            </div>
+        }
+
+        @if (canManageRoles)
+        {
+            <details class="role">
+                <summary>Create a role</summary>
+                <form method="post" @formname="create-role" @onsubmit="CreateRoleAsync" data-enhance>
+                    <AntiforgeryToken />
+                    <RoleEditor Role="new RoleForm()" IdPrefix="new" />
+                    <button type="submit" class="btn btn-primary btn-small">Create role</button>
+                </form>
+            </details>
+        }
+    </section>
+</FamilyPage>
+
+@code {
+    [SupplyParameterFromForm(FormName = "family-settings")]
+    private FamilySettingsForm? FamilySettings { get; set; }
+
+    // Bound from whichever per-row form was posted.
+    [SupplyParameterFromForm]
+    private MemberForm? MemberEdit { get; set; }
+
+    [SupplyParameterFromForm]
+    private RoleForm? RoleEdit { get; set; }
+
+    protected override Task LoadAsync()
+    {
+        FamilySettings ??= new FamilySettingsForm { Name = Family!.Name, DefaultRoleId = Family.DefaultRoleId };
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        var saved = await Api.UpdateFamilyAsync(FamilyId, new UpdateFamilyRequest(FamilySettings!.Name!.Trim(), FamilySettings.DefaultRoleId), Aborted);
+        Complete(saved.Problem);
+    }
+
+    private async Task RegenerateAsync()
+    {
+        var result = await Api.RegenerateInviteCodeAsync(FamilyId, Aborted);
+        Complete(result.Problem);
+    }
+
+    private async Task UpdateMemberAsync()
+    {
+        if (MemberEdit is null)
+        {
+            return;
+        }
+
+        var result = await Api.UpdateMemberAsync(FamilyId, MemberEdit.MemberId, new UpdateMemberRequest(MemberEdit.RoleId, MemberEdit.IsOwner), Aborted);
+        Complete(result.Problem);
+    }
+
+    private async Task RemoveAsync(FamilyMemberResponse member)
+    {
+        var result = await Api.RemoveMemberAsync(FamilyId, member.MemberId, Aborted);
+        Complete(result.Problem);
+    }
+
+    private async Task LeaveAsync(Guid myMemberId)
+    {
+        var result = await Api.RemoveMemberAsync(FamilyId, myMemberId, Aborted);
+        Complete(result.Problem, "/");
+    }
+
+    private async Task UpdateRoleAsync()
+    {
+        var error = ValidateRoleForm();
+        if (error is not null || RoleEdit!.RoleId is not { } roleId)
+        {
+            ActionProblem = Invalid(error ?? "The role couldn't be read.");
+            return;
+        }
+
+        var result = await Api.UpdateRoleAsync(FamilyId, roleId, RoleEdit.ToRequest(), Aborted);
+        Complete(result.Problem);
+    }
+
+    private async Task CreateRoleAsync()
+    {
+        var error = ValidateRoleForm();
+        if (error is not null)
+        {
+            ActionProblem = Invalid(error);
+            return;
+        }
+
+        var result = await Api.CreateRoleAsync(FamilyId, RoleEdit!.ToRequest(), Aborted);
+        Complete(result.Problem);
+    }
+
+    /// <summary>Returns the first problem with the posted role form, or null when it's valid.</summary>
+    private string? ValidateRoleForm() =>
+        RoleEdit is null ? "The role couldn't be read." : FormValidation.FirstError(RoleEdit);
+
+    private async Task DeleteRoleAsync(FamilyRoleResponse role)
+    {
+        var result = await Api.DeleteRoleAsync(FamilyId, role.Id, Aborted);
+        Complete(result.Problem);
+    }
+
+    private static ApiProblem Invalid(string message) =>
+        new(System.Net.HttpStatusCode.BadRequest, message, null, new Dictionary<string, string[]>(StringComparer.Ordinal), null);
+}

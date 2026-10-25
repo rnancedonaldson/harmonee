@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Families\Harmonee.Families\Harmonee.Families.csproj" />
+  </ItemGroup>
+</Project>
